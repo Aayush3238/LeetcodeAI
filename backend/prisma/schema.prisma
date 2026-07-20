@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  avatar        String?
+  leetcodeUsername String? @unique
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  submissions    Submission[]
+  conversations  Conversation[]
+  revisionPlans  RevisionPlan[]
+  weakTopics     WeakTopic[]
+  analytics      Analytics[]
+  problemsSolved UserProblem[]
+}
+
+model Problem {
+  id          String   @id @default(cuid())
+  leetcodeId  Int      @unique
+  title       String
+  titleSlug   String   @unique
+  difficulty  String
+  topic       String
+  description String?
+  tags        String[]
+  acceptance  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  submissions Submission[]
+  solvedBy    UserProblem[]
+}
+
+model UserProblem {
+  id        String   @id @default(cuid())
+  userId    String
+  problemId String
+  solvedAt  DateTime @default(now())
+  status    String   @default("solved")
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+}
+
+model Submission {
+  id             String   @id @default(cuid())
+  userId         String
+  problemId      String
+  code           String
+  language       String
+  runtime        Float?
+  memory         Float?
+  status         String
+  submissionTime DateTime @default(now())
+  createdAt      DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+}
+
+model Conversation {
+  id        String    @id @default(cuid())
+  userId    String
+  title     String    @default("New Conversation")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages Message[]
+}
+
+model Message {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String
+  content        String
+  createdAt      DateTime @default(now())
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+
+model RevisionPlan {
+  id        String         @id @default(cuid())
+  userId    String
+  type      String
+  startDate DateTime       @default(now())
+  endDate   DateTime?
+  createdAt DateTime       @default(now())
+
+  user  User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  items RevisionItem[]
+}
+
+model RevisionItem {
+  id             String   @id @default(cuid())
+  revisionPlanId String
+  day            Int
+  topic          String
+  problems       String[]
+  estimatedTime  Int
+  completed      Boolean  @default(false)
+  completedAt    DateTime?
+
+  revisionPlan RevisionPlan @relation(fields: [revisionPlanId], references: [id], onDelete: Cascade)
+}
+
+model WeakTopic {
+  id           String   @id @default(cuid())
+  userId       String
+  topic        String
+  strengthScore Float
+  problemCount Int      @default(0)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, topic])
+}
+
+model Analytics {
+  id        String   @id @default(cuid())
+  userId    String
+  type      String
+  data      Json
+  period    String
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
