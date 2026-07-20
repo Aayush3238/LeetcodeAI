@@ -63,4 +63,13 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, getProfile, updateProfile };
+const deleteAccount = async (req, res, next) => {
+  try {
+    await prisma.user.delete({ where: { id: req.user.id } });
+    res.json({ message: "Account deleted" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signup, login, getProfile, updateProfile, deleteAccount };

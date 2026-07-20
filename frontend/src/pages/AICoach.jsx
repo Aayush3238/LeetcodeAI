@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useQuery, useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { aiAPI } from '../services/api'
 import { PageHeader, Button, EmptyState, Skeleton } from '../components/ui'
@@ -23,6 +23,7 @@ export default function AICoach() {
   const [activeConversation, setActiveConversation] = useState(null)
   const [input, setInput] = useState('')
   const messagesEndRef = useRef(null)
+  const queryClient = useQueryClient()
 
   const { data: conversations, isLoading: loadingConversations } = useQuery({
     queryKey: ['conversations'],
@@ -32,28 +33,27 @@ export default function AICoach() {
   const createMutation = useMutation({
     mutationFn: () => aiAPI.createConversation({ title: 'New Chat' }).then((r) => r.data.conversation),
     onSuccess: (conv) => {
-      setActiveConversation(conv)
+      setActiveConversation({ ...conv, messages: [] })
+      queryClient.invalidateQueries({ queryKey: ['conversations'] })
     },
   })
 
   const sendMutation = useMutation({
     mutationFn: (data) => aiAPI.sendMessage(data).then((r) => r.data.message),
     onSuccess: (msg) => {
-      if (activeConversation) {
-        setActiveConversation((prev) => ({
-          ...prev,
-          messages: [...prev.messages, msg],
-        }))
-      }
+      setActiveConversation((prev) => ({
+        ...prev,
+        messages: [...(prev?.messages || []).filter((m) => !m._pending), msg],
+      }))
     },
   })
 
   const handleSend = () => {
     if (!input.trim() || !activeConversation) return
-    const userMsg = { role: 'user', content: input }
+    const userMsg = { role: 'user', content: input, _pending: true }
     setActiveConversation((prev) => ({
       ...prev,
-      messages: [...prev.messages, userMsg],
+      messages: [...(prev?.messages || []), userMsg],
     }))
     sendMutation.mutate({ conversationId: activeConversation.id, content: input })
     setInput('')
@@ -103,9 +103,7 @@ export default function AICoach() {
               {['Explain this solution', 'Why did I get TLE?', 'Compare approaches', 'Give me a hint'].map((q) => (
                 <button key={q} onClick={() => {
                   createMutation.mutate(undefined, {
-                    onSuccess: (conv) => {
-                      setInput(q)
-                    },
+                    onSuccess: () => setInput(q),
                   })
                 }} className="p-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-left text-sm text-dark-300 transition-colors">
                   {q}
@@ -127,7 +125,7 @@ export default function AICoach() {
                 </div>
               )}
               {(activeConversation.messages || []).map((msg, i) => (
-                <ChatMessage key={i} message={msg} />
+                <ChatMessage key={`${activeConversation.id}-${i}`} message={msg} />
               ))}
               {sendMutation.isPending && (
                 <div className="flex gap-3">

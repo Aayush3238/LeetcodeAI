@@ -1,4 +1,5 @@
 const OpenAI = require("openai");
+const redis = require("../../config/redis");
 
 let openai;
 if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== "your-openai-api-key") {
@@ -7,7 +8,24 @@ if (process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== "your-openai-ap
 
 const SYSTEM_PROMPT = `You are LeetCoach AI, an expert competitive programming coach. You help users understand algorithms, data structures, and coding patterns. Be concise, educational, and encouraging.`;
 
-function mockAIResponse(type, data) {
+const CACHE_TTL = 3600;
+
+async function getCached(key) {
+  try {
+    const cached = await redis.get(key);
+    return cached ? JSON.parse(cached) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function setCache(key, value) {
+  try {
+    await redis.set(key, JSON.stringify(value), "EX", CACHE_TTL);
+  } catch {}
+}
+
+function mockAIResponse(type) {
   const responses = {
     analyze: {
       timeComplexity: "O(n) - Single pass through the array",
@@ -34,6 +52,10 @@ function mockAIResponse(type, data) {
 
 class AIService {
   async analyzeSubmission(code, language, problemTitle) {
+    const cacheKey = `analyze:${language}:${code.slice(0, 100)}`;
+    const cached = await getCached(cacheKey);
+    if (cached) return cached;
+
     if (!openai) return mockAIResponse("analyze");
 
     try {
@@ -49,13 +71,19 @@ class AIService {
         temperature: 0.7,
         max_tokens: 1000,
       });
-      return JSON.parse(response.choices[0].message.content);
+      const result = JSON.parse(response.choices[0].message.content);
+      await setCache(cacheKey, result);
+      return result;
     } catch {
       return mockAIResponse("analyze");
     }
   }
 
   async detectPattern(code, language) {
+    const cacheKey = `pattern:${language}:${code.slice(0, 100)}`;
+    const cached = await getCached(cacheKey);
+    if (cached) return cached;
+
     if (!openai) return mockAIResponse("pattern");
 
     try {
@@ -71,7 +99,9 @@ class AIService {
         temperature: 0.5,
         max_tokens: 500,
       });
-      return JSON.parse(response.choices[0].message.content);
+      const result = JSON.parse(response.choices[0].message.content);
+      await setCache(cacheKey, result);
+      return result;
     } catch {
       return mockAIResponse("pattern");
     }

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useMutation } from '@tanstack/react-query'
+import { useQuery, useMutation } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
-import { aiAPI } from '../services/api'
+import { aiAPI, dashboardAPI } from '../services/api'
 import { PageHeader, Button, Badge, Skeleton } from '../components/ui'
 import { Calendar, Clock, CheckCircle, Circle } from 'lucide-react'
 import { formatTime } from '../utils'
@@ -16,9 +16,16 @@ export default function RevisionPlan() {
   const [selectedPlan, setSelectedPlan] = useState(null)
   const [planData, setPlanData] = useState(null)
 
+  const { data: weakTopicsData } = useQuery({
+    queryKey: ['weak-topics'],
+    queryFn: () => dashboardAPI.getWeakTopics().then((r) => r.data),
+  })
+
+  const weakTopics = (weakTopicsData?.weakTopics || []).map((t) => t.topic)
+
   const { mutate: generatePlan, isPending } = useMutation({
     mutationFn: (planType) => aiAPI.generateRevisionPlan({
-      weakTopics: ['Dynamic Programming', 'Graph', 'Binary Search', 'Sliding Window', 'Backtracking'],
+      weakTopics: weakTopics.length > 0 ? weakTopics : ['Dynamic Programming', 'Graph', 'Binary Search'],
       planType,
     }).then((r) => r.data.plan),
     onSuccess: (plan) => setPlanData(plan),
@@ -44,6 +51,15 @@ export default function RevisionPlan() {
           </motion.button>
         ))}
       </div>
+
+      {weakTopics.length > 0 && (
+        <div className="card p-4">
+          <p className="text-sm text-dark-400 mb-2">Your weak topics:</p>
+          <div className="flex flex-wrap gap-2">
+            {weakTopics.map((t) => <Badge key={t} variant="danger">{t}</Badge>)}
+          </div>
+        </div>
+      )}
 
       {isPending && (
         <div className="space-y-4">

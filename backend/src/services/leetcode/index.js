@@ -90,12 +90,14 @@ class LeetCodeService {
   async getDailyActivity() {
     const activity = [];
     const now = new Date();
+    const pattern = [0, 1, 0, 2, 1, 3, 0, 1, 2, 1, 0, 1, 2, 3, 1, 0, 2, 1, 3, 2, 0, 1, 0, 2, 1, 0, 3, 2, 1, 0];
     for (let i = 365; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(date.getDate() - i);
+      const seed = date.getFullYear() * 10000 + (date.getMonth() + 1) * 100 + date.getDate();
       activity.push({
         date: date.toISOString().split("T")[0],
-        count: Math.floor(Math.random() * 5),
+        count: pattern[seed % pattern.length],
       });
     }
     return activity;

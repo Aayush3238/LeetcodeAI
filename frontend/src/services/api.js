@@ -28,6 +28,7 @@ export const authAPI = {
   login: (data) => api.post('/auth/login', data),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
+  deleteAccount: () => api.delete('/auth/account'),
 }
 
 export const dashboardAPI = {
@@ -51,6 +52,27 @@ export const aiAPI = {
   getConversations: () => api.get('/ai/conversations'),
   createConversation: (data) => api.post('/ai/conversations', data),
   sendMessage: (data) => api.post('/ai/chat', data),
+  chatStream: async function* (data) {
+    const token = useAuthStore.getState().token
+    const res = await fetch('/api/ai/chat/stream', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify(data),
+    })
+    const reader = res.body.getReader()
+    const decoder = new TextDecoder()
+    while (true) {
+      const { done, value } = await reader.read()
+      if (done) break
+      const text = decoder.decode(value)
+      const lines = text.split('\n').filter((l) => l.startsWith('data: '))
+      for (const line of lines) {
+        const payload = JSON.parse(line.slice(6))
+        if (payload.done) return
+        if (payload.content) yield payload.content
+      }
+    }
+  },
   generateRevisionPlan: (data) => api.post('/ai/revision-plan', data),
   explainCode: (data) => api.post('/ai/explain', data),
 }

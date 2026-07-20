@@ -1,18 +1,40 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
 import { authAPI } from '../services/api'
-import { PageHeader, Button, Input } from '../components/ui'
+import { PageHeader, Button } from '../components/ui'
 import { Settings as SettingsIcon, User, Key, Trash2, Moon, Sun } from 'lucide-react'
 import toast from 'react-hot-toast'
 
+function getStoredTheme() {
+  if (typeof window !== 'undefined') return localStorage.getItem('theme') || 'dark'
+  return 'dark'
+}
+
+function applyTheme(theme) {
+  const root = document.documentElement
+  if (theme === 'dark') {
+    root.classList.add('dark')
+    root.classList.remove('light')
+  } else {
+    root.classList.remove('dark')
+    root.classList.add('light')
+  }
+  localStorage.setItem('theme', theme)
+}
+
 export default function Settings() {
   const { user, updateUser, logout } = useAuthStore()
-  const [theme, setTheme] = useState('dark')
+  const [theme, setTheme] = useState(getStoredTheme)
+  const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || '')
   const { register, handleSubmit } = useForm({
     defaultValues: { name: user?.name || '', leetcodeUsername: user?.leetcodeUsername || '' },
   })
+
+  useEffect(() => {
+    applyTheme(theme)
+  }, [theme])
 
   const onUpdateProfile = async (data) => {
     try {
@@ -24,10 +46,19 @@ export default function Settings() {
     }
   }
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure? This cannot be undone.')) {
-      toast.success('Account deleted (demo)')
+  const onSaveApiKey = () => {
+    localStorage.setItem('openai_api_key', apiKey)
+    toast.success('API key saved locally')
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm('Are you sure? This will permanently delete your account and all data.')) return
+    try {
+      await authAPI.deleteAccount()
+      toast.success('Account deleted')
       logout()
+    } catch {
+      toast.error('Failed to delete account')
     }
   }
 
@@ -61,10 +92,16 @@ export default function Settings() {
         <div className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-dark-300 mb-2">OpenAI API Key</label>
-            <input type="password" className="input w-full" placeholder="sk-..." />
-            <p className="text-dark-500 text-xs mt-1">Used for AI code analysis and coaching</p>
+            <input
+              type="password"
+              value={apiKey}
+              onChange={(e) => setApiKey(e.target.value)}
+              className="input w-full"
+              placeholder="sk-..."
+            />
+            <p className="text-dark-500 text-xs mt-1">Stored in your browser's localStorage</p>
           </div>
-          <Button variant="secondary">Save API Key</Button>
+          <Button variant="secondary" onClick={onSaveApiKey}>Save API Key</Button>
         </div>
       </motion.div>
 
