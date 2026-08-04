@@ -4,7 +4,25 @@ const prisma = require("../config/db");
 const getProblems = async (req, res, next) => {
   try {
     const { search, difficulty, topic, page = 1, limit = 20, sort = "title" } = req.query;
-    let problems = await leetcodeService.getProblems();
+
+    let problems;
+    try {
+      const dbProblems = await prisma.problem.findMany({
+        where: {},
+        orderBy: { title: "asc" },
+      });
+      problems = dbProblems.map((p) => ({
+        leetcodeId: p.leetcodeId,
+        title: p.title,
+        titleSlug: p.titleSlug,
+        difficulty: p.difficulty,
+        topic: p.topic,
+        tags: p.tags,
+        acceptance: p.acceptance,
+      }));
+    } catch {
+      problems = await leetcodeService.getProblems();
+    }
 
     if (search) {
       problems = problems.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()));
@@ -28,7 +46,14 @@ const getProblems = async (req, res, next) => {
 
 const getTopics = async (req, res, next) => {
   try {
-    const problems = await leetcodeService.getProblems();
+    let problems;
+    try {
+      const dbProblems = await prisma.problem.findMany({ select: { topic: true } });
+      problems = dbProblems;
+    } catch {
+      problems = await leetcodeService.getProblems();
+    }
+
     const topics = [...new Set(problems.map((p) => p.topic))];
     res.json({ topics });
   } catch (error) {

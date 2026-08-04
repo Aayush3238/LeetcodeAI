@@ -1,10 +1,22 @@
-const leetcodeService = require("../services/leetcode");
-const aiService = require("../services/ai");
 const prisma = require("../config/db");
+const aiService = require("../services/ai");
 
 const getSubmissions = async (req, res, next) => {
   try {
-    const submissions = await leetcodeService.getSubmissions(req.user.id);
+    const userId = req.user.id;
+
+    let submissions;
+    try {
+      submissions = await prisma.submission.findMany({
+        where: { userId },
+        include: { problem: true },
+        orderBy: { submissionTime: "desc" },
+        take: 50,
+      });
+    } catch {
+      submissions = [];
+    }
+
     res.json({ submissions });
   } catch (error) {
     next(error);

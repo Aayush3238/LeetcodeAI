@@ -1,21 +1,66 @@
-const leetcodeService = require("../services/leetcode");
 const prisma = require("../config/db");
 
 const getDashboard = async (req, res, next) => {
   try {
-    const [stats, topicDistribution, dailyActivity, recentProblems] = await Promise.all([
-      leetcodeService.getUserStats(),
-      leetcodeService.getTopicDistribution(),
-      leetcodeService.getDailyActivity(),
-      leetcodeService.getProblems().then((p) => p.slice(0, 5)),
+    const userId = req.user.id;
+
+    const [problemsSolved, submissions, recentProblems] = await Promise.all([
+      prisma.userProblem.findMany({
+        where: { userId },
+        include: { problem: true },
+      }),
+      prisma.submission.findMany({
+        where: { userId },
+        include: { problem: true },
+        orderBy: { submissionTime: "desc" },
+      }),
+      prisma.userProblem.findMany({
+        where: { userId },
+        include: { problem: true },
+        orderBy: { solvedAt: "desc" },
+        take: 5,
+      }),
     ]);
+
+    const easy = problemsSolved.filter((p) => p.problem.difficulty === "Easy").length;
+    const medium = problemsSolved.filter((p) => p.problem.difficulty === "Medium").length;
+    const hard = problemsSolved.filter((p) => p.problem.difficulty === "Hard").length;
+
+    const topicMap = {};
+    problemsSolved.forEach(({ problem }) => {
+      const topic = problem.topic || "Unknown";
+      topicMap[topic] = (topicMap[topic] || 0) + 1;
+    });
+    const topicDistribution = Object.entries(topicMap)
+      .map(([topic, count]) => ({ topic, count }))
+      .sort((a, b) => b.count - a.count);
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const now = new Date();
+    const dailyActivity = [];
+    for (let i = 365; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * dayMs);
+      const dayStr = date.toISOString().split("T")[0];
+      const count = submissions.filter((s) => {
+        const sDate = new Date(s.submissionTime).toISOString().split("T")[0];
+        return sDate === dayStr;
+      }).length;
+      dailyActivity.push({ date: dayStr, count });
+    }
 
     res.json({
       user: req.user,
-      stats,
+      stats: {
+        totalSolved: problemsSolved.length,
+        easy,
+        medium,
+        hard,
+        totalSubmissions: submissions.length,
+        acceptanceRate: submissions.length > 0 ? Math.round((problemsSolved.length / submissions.length) * 100) : 0,
+      },
       topicDistribution,
       dailyActivity,
-      recentProblems,
+      recentProblems: recentProblems.map((rp) => rp.problem),
     });
   } catch (error) {
     next(error);
@@ -24,34 +69,67 @@ const getDashboard = async (req, res, next) => {
 
 const getAnalytics = async (req, res, next) => {
   try {
-    const topicDistribution = await leetcodeService.getTopicDistribution();
-    const stats = await leetcodeService.getUserStats();
+    const userId = req.user.id;
 
-    const weeklyProgress = [
-      { week: "Week 1", solved: 12 },
-      { week: "Week 2", solved: 18 },
-      { week: "Week 3", solved: 15 },
-      { week: "Week 4", solved: 22 },
-    ];
+    const [problemsSolved, submissions] = await Promise.all([
+      prisma.userProblem.findMany({
+        where: { userId },
+        include: { problem: true },
+      }),
+      prisma.submission.findMany({
+        where: { userId },
+        include: { problem: true },
+        orderBy: { submissionTime: "asc" },
+      }),
+    ]);
 
-    const monthlyProgress = [
-      { month: "Jan", solved: 45 },
-      { month: "Feb", solved: 52 },
-      { month: "Mar", solved: 38 },
-      { month: "Apr", solved: 61 },
-      { month: "May", solved: 48 },
-      { month: "Jun", solved: 55 },
-      { month: "Jul", solved: 42 },
-    ];
+    const topicMap = {};
+    problemsSolved.forEach(({ problem }) => {
+      const topic = problem.topic || "Unknown";
+      topicMap[topic] = (topicMap[topic] || 0) + 1;
+    });
+    const topicDistribution = Object.entries(topicMap)
+      .map(([topic, count]) => ({ topic, count }))
+      .sort((a, b) => b.count - a.count);
 
-    const submissionFrequency = Array.from({ length: 24 }, (_, i) => ({
-      hour: `${i}:00`,
-      count: Math.floor(Math.random() * 10),
-    }));
+    const easy = problemsSolved.filter((p) => p.problem.difficulty === "Easy").length;
+    const medium = problemsSolved.filter((p) => p.problem.difficulty === "Medium").length;
+    const hard = problemsSolved.filter((p) => p.problem.difficulty === "Hard").length;
+
+    const weekMs = 7 * 24 * 60 * 60 * 1000;
+    const now = new Date();
+    const weeklyProgress = [];
+    for (let w = 3; w >= 0; w--) {
+      const weekStart = new Date(now.getTime() - (w + 1) * weekMs);
+      const weekEnd = new Date(now.getTime() - w * weekMs);
+      const count = submissions.filter((s) => {
+        const t = new Date(s.submissionTime);
+        return t >= weekStart && t < weekEnd;
+      }).length;
+      weeklyProgress.push({ week: `Week ${4 - w}`, solved: count });
+    }
+
+    const monthlyProgress = [];
+    for (let m = 6; m >= 0; m--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - m, 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0);
+      const count = submissions.filter((s) => {
+        const t = new Date(s.submissionTime);
+        return t >= d && t <= monthEnd;
+      }).length;
+      monthlyProgress.push({ month: d.toLocaleString("default", { month: "short" }), solved: count });
+    }
+
+    const hourCounts = Array.from({ length: 24 }, () => 0);
+    submissions.forEach((s) => {
+      const hour = new Date(s.submissionTime).getHours();
+      hourCounts[hour]++;
+    });
+    const submissionFrequency = hourCounts.map((count, i) => ({ hour: `${i}:00`, count }));
 
     res.json({
       topicDistribution,
-      difficultyDistribution: { easy: stats.easy, medium: stats.medium, hard: stats.hard },
+      difficultyDistribution: { easy, medium, hard },
       weeklyProgress,
       monthlyProgress,
       submissionFrequency,
@@ -63,21 +141,34 @@ const getAnalytics = async (req, res, next) => {
 
 const getWeakTopics = async (req, res, next) => {
   try {
-    const topicDistribution = await leetcodeService.getTopicDistribution();
-    const maxCount = Math.max(...topicDistribution.map((t) => t.count));
+    const userId = req.user.id;
 
-    const topics = topicDistribution.map((t) => ({
-      topic: t.topic,
-      strengthScore: Math.round((t.count / maxCount) * 100),
-      problemCount: t.count,
-    }));
+    const problemsSolved = await prisma.userProblem.findMany({
+      where: { userId },
+      include: { problem: true },
+    });
 
-    topics.sort((a, b) => a.strengthScore - b.strengthScore);
+    const topicMap = {};
+    problemsSolved.forEach(({ problem }) => {
+      const topic = problem.topic || "Unknown";
+      topicMap[topic] = (topicMap[topic] || 0) + 1;
+    });
+
+    const maxCount = Math.max(...Object.values(topicMap), 1);
+
+    const topics = Object.entries(topicMap)
+      .map(([topic, count]) => ({
+        topic,
+        strengthScore: Math.round((count / maxCount) * 100),
+        problemCount: count,
+      }))
+      .sort((a, b) => a.strengthScore - b.strengthScore);
 
     const weakTopics = topics.slice(0, 5);
     const strongTopics = topics.slice(-5).reverse();
-
-    const overallStrength = Math.round(topics.reduce((acc, t) => acc + t.strengthScore, 0) / topics.length);
+    const overallStrength = topics.length > 0
+      ? Math.round(topics.reduce((acc, t) => acc + t.strengthScore, 0) / topics.length)
+      : 0;
 
     res.json({ weakTopics, strongTopics, overallStrength, topics });
   } catch (error) {
