@@ -1,6 +1,15 @@
 const prisma = require("../config/db");
+let redis;
+try {
+  redis = require("../config/redis");
+} catch {
+  redis = null;
+}
 
 const LEETCODE_GRAPHQL_URL = "https://leetcode.com/graphql";
+const CACHE_TTL = 600;
+const MAX_RETRIES = 3;
+const RETRY_DELAY_MS = 1000;
 
 const HEADERS = {
   "Content-Type": "application/json",
@@ -8,25 +17,63 @@ const HEADERS = {
   "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
 };
 
+async function getCached(key) {
+  if (!redis) return null;
+  try {
+    const data = await redis.get(key);
+    return data ? JSON.parse(data) : null;
+  } catch {
+    return null;
+  }
+}
+
+async function setCache(key, data, ttl = CACHE_TTL) {
+  if (!redis) return;
+  try {
+    await redis.setex(key, ttl, JSON.stringify(data));
+  } catch {}
+}
+
 async function graphqlQuery(query, variables = {}) {
-  const res = await fetch(LEETCODE_GRAPHQL_URL, {
-    method: "POST",
-    headers: HEADERS,
-    body: JSON.stringify({ query, variables }),
-  });
+  let lastError;
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      const res = await fetch(LEETCODE_GRAPHQL_URL, {
+        method: "POST",
+        headers: HEADERS,
+        body: JSON.stringify({ query, variables }),
+      });
 
-  if (!res.ok) {
-    throw new Error(`LeetCode API error: ${res.status}`);
-  }
+      if (res.status === 429) {
+        const delay = RETRY_DELAY_MS * attempt * 2;
+        await new Promise((r) => setTimeout(r, delay));
+        continue;
+      }
 
-  const json = await res.json();
-  if (json.errors) {
-    throw new Error(json.errors[0]?.message || "LeetCode GraphQL error");
+      if (!res.ok) {
+        throw new Error(`LeetCode API error: ${res.status}`);
+      }
+
+      const json = await res.json();
+      if (json.errors) {
+        throw new Error(json.errors[0]?.message || "LeetCode GraphQL error");
+      }
+      return json.data;
+    } catch (error) {
+      lastError = error;
+      if (attempt < MAX_RETRIES) {
+        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS * attempt));
+      }
+    }
   }
-  return json.data;
+  throw lastError;
 }
 
 async function fetchUserProfile(username) {
+  const cacheKey = `lc:profile:${username}`;
+  const cached = await getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query userPublicProfile($username: String!) {
       matchedUser(username: $username) {
@@ -48,10 +95,16 @@ async function fetchUserProfile(username) {
   `;
 
   const data = await graphqlQuery(query, { username });
-  return data?.matchedUser;
+  const result = data?.matchedUser;
+  if (result) await setCache(cacheKey, result, 300);
+  return result;
 }
 
 async function fetchUserSolvedProblems(username) {
+  const cacheKey = `lc:solved:${username}`;
+  const cached = await getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query userSolvedProblems($username: String!) {
       allQuestionsCount {
@@ -75,10 +128,15 @@ async function fetchUserSolvedProblems(username) {
   `;
 
   const data = await graphqlQuery(query, { username });
+  if (data) await setCache(cacheKey, data, 300);
   return data;
 }
 
 async function fetchRecentSubmissions(username, limit = 20) {
+  const cacheKey = `lc:recent:${username}:${limit}`;
+  const cached = await getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query recentSubmissions($username: String!, $limit: Int!) {
       recentAcSubmissionList(username: $username, limit: $limit) {
@@ -92,10 +150,16 @@ async function fetchRecentSubmissions(username, limit = 20) {
   `;
 
   const data = await graphqlQuery(query, { username, limit });
-  return data?.recentAcSubmissionList || [];
+  const result = data?.recentAcSubmissionList || [];
+  if (result.length > 0) await setCache(cacheKey, result, 120);
+  return result;
 }
 
 async function fetchProblemDetails(titleSlug) {
+  const cacheKey = `lc:problem:${titleSlug}`;
+  const cached = await getCached(cacheKey);
+  if (cached) return cached;
+
   const query = `
     query questionData($titleSlug: String!) {
       question(titleSlug: $titleSlug) {
@@ -113,7 +177,9 @@ async function fetchProblemDetails(titleSlug) {
   `;
 
   const data = await graphqlQuery(query, { titleSlug });
-  return data?.question;
+  const result = data?.question;
+  if (result) await setCache(cacheKey, result, 86400);
+  return result;
 }
 
 class LeetCodeService {
