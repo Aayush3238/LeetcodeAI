@@ -8,14 +8,18 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  password      String
-  name          String
-  avatar        String?
-  leetcodeUsername String? @unique
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id              String    @id @default(cuid())
+  email           String    @unique
+  password        String?
+  name            String
+  avatar          String?
+  googleId        String?   @unique
+  githubId        String?   @unique
+  githubToken     String?
+  leetcodeUsername String?   @unique
+  leetcodeSession String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 
   submissions    Submission[]
   conversations  Conversation[]

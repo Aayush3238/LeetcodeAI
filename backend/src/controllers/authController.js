@@ -3,6 +3,17 @@ const prisma = require("../config/db");
 const { generateToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
 
+const userSelect = {
+  id: true,
+  name: true,
+  email: true,
+  avatar: true,
+  leetcodeUsername: true,
+  googleId: true,
+  githubId: true,
+  createdAt: true,
+};
+
 const signup = async (req, res, next) => {
   try {
     const data = signupSchema.parse(req.body);
@@ -10,7 +21,7 @@ const signup = async (req, res, next) => {
 
     const user = await prisma.user.create({
       data: { ...data, password: hashedPassword },
-      select: { id: true, name: true, email: true, avatar: true, createdAt: true },
+      select: userSelect,
     });
 
     const token = generateToken(user.id);
@@ -29,6 +40,10 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (!user.password) {
+      return res.status(401).json({ message: "This account uses Google login. Please sign in with Google." });
+    }
+
     const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
       return res.status(401).json({ message: "Invalid email or password" });
@@ -43,6 +58,17 @@ const login = async (req, res, next) => {
   }
 };
 
+const googleCallback = async (req, res) => {
+  try {
+    const token = generateToken(req.user.id);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
+  } catch (error) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/login?error=auth_failed`);
+  }
+};
+
 const getProfile = async (req, res) => {
   res.json({ user: req.user });
 };
@@ -54,7 +80,7 @@ const updateProfile = async (req, res, next) => {
     const user = await prisma.user.update({
       where: { id: req.user.id },
       data,
-      select: { id: true, name: true, email: true, avatar: true, leetcodeUsername: true, createdAt: true },
+      select: userSelect,
     });
 
     res.json({ user });
@@ -72,4 +98,4 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, getProfile, updateProfile, deleteAccount };
+module.exports = { signup, login, googleCallback, getProfile, updateProfile, deleteAccount };

@@ -12,7 +12,7 @@ const authenticate = async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
-      select: { id: true, email: true, name: true, avatar: true, leetcodeUsername: true },
+      select: { id: true, email: true, name: true, avatar: true, leetcodeUsername: true, googleId: true, githubId: true },
     });
 
     if (!user) {

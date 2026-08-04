@@ -4,6 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const passport = require("./config/passport");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
 const logger = require("./utils/logger");
@@ -22,6 +23,12 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173", crede
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
+app.use(require("express-session")({
+  secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || "dev-session-secret",
+  resave: false,
+  saveUninitialized: false,
+}));
+app.use(passport.initialize());
 app.use("/api", apiLimiter);
 
 app.use("/api/auth", authRoutes);

@@ -7,6 +7,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
+import OAuthCallback from './pages/OAuthCallback'
 import Dashboard from './pages/Dashboard'
 import Profile from './pages/Profile'
 import Problems from './pages/Problems'
@@ -56,6 +57,7 @@ export default function App() {
           <Routes>
             <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
             <Route path="/signup" element={<PublicRoute><Signup /></PublicRoute>} />
+            <Route path="/oauth/callback" element={<OAuthCallback />} />
             <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
               <Route index element={<Navigate to="/dashboard" />} />
               <Route path="dashboard" element={<Dashboard />} />
