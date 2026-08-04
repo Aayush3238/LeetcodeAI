@@ -20,12 +20,13 @@ const getStatus = async (req, res, next) => {
   try {
     const user = await prisma.user.findUnique({
       where: { id: req.user.id },
-      select: { leetcodeUsername: true },
+      select: { leetcodeUsername: true, lastSyncedAt: true },
     });
 
     res.json({
       connected: !!user.leetcodeUsername,
       username: user.leetcodeUsername,
+      lastSyncedAt: user.lastSyncedAt,
     });
   } catch (error) {
     next(error);
@@ -59,6 +60,11 @@ const connect = async (req, res, next) => {
 
     const result = await realLeetcode.syncToDatabase(req.user.id, trimmed);
 
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { lastSyncedAt: new Date() },
+    });
+
     res.json({
       message: "LeetCode account connected and synced",
       profile: result.profile,
@@ -81,6 +87,11 @@ const sync = async (req, res, next) => {
     }
 
     const result = await realLeetcode.syncToDatabase(req.user.id, user.leetcodeUsername);
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { lastSyncedAt: new Date() },
+    });
 
     res.json({
       message: "LeetCode data synced",

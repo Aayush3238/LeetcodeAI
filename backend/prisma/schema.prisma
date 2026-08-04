@@ -18,6 +18,7 @@ model User {
   githubToken     String?
   leetcodeUsername String?   @unique
   leetcodeSession String?
+  lastSyncedAt    DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
 

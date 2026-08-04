@@ -32,6 +32,7 @@ export default function Settings() {
   const [lcConnected, setLcConnected] = useState(!!user?.leetcodeUsername)
   const [lcSyncing, setLcSyncing] = useState(false)
   const [lcConnecting, setLcConnecting] = useState(false)
+  const [lcLastSynced, setLcLastSynced] = useState(null)
   const [ghConnected, setGhConnected] = useState(false)
   const [ghConnecting, setGhConnecting] = useState(false)
   const { register, handleSubmit } = useForm({
@@ -47,6 +48,7 @@ export default function Settings() {
       .then((res) => {
         setLcConnected(res.data.connected)
         setLcUsername(res.data.username || '')
+        setLcLastSynced(res.data.lastSyncedAt)
       })
       .catch(() => {})
 
@@ -175,6 +177,9 @@ export default function Settings() {
               <CheckCircle size={16} className="text-green-400" />
               <span className="text-green-400 text-sm font-medium">Connected as <strong>{lcUsername}</strong></span>
             </div>
+            {lcLastSynced && (
+              <p className="text-dark-500 text-xs">Last synced: {new Date(lcLastSynced).toLocaleString()}</p>
+            )}
             <div className="flex gap-3">
               <Button onClick={handleLcSync} disabled={lcSyncing} variant="secondary">
                 <RefreshCw size={16} className={lcSyncing ? 'animate-spin' : ''} />
