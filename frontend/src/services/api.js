@@ -77,4 +77,12 @@ export const aiAPI = {
   explainCode: (data) => api.post('/ai/explain', data),
 }
 
+export const leetcodeAPI = {
+  getStatus: () => api.get('/leetcode/status'),
+  getProfile: (username) => api.get(`/leetcode/profile/${username}`),
+  connect: (username) => api.post('/leetcode/connect', { username }),
+  sync: () => api.post('/leetcode/sync'),
+  disconnect: () => api.post('/leetcode/disconnect'),
+}
+
 export default api

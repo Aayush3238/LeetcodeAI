@@ -2,9 +2,9 @@ import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
-import { authAPI } from '../services/api'
+import { authAPI, leetcodeAPI } from '../services/api'
 import { PageHeader, Button } from '../components/ui'
-import { Settings as SettingsIcon, User, Key, Trash2, Moon, Sun } from 'lucide-react'
+import { Settings as SettingsIcon, User, Key, Trash2, Moon, Sun, Link as LinkIcon, Unlink, RefreshCw, CheckCircle } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 function getStoredTheme() {
@@ -28,6 +28,10 @@ export default function Settings() {
   const { user, updateUser, logout } = useAuthStore()
   const [theme, setTheme] = useState(getStoredTheme)
   const [apiKey, setApiKey] = useState(() => localStorage.getItem('openai_api_key') || '')
+  const [lcUsername, setLcUsername] = useState(user?.leetcodeUsername || '')
+  const [lcConnected, setLcConnected] = useState(!!user?.leetcodeUsername)
+  const [lcSyncing, setLcSyncing] = useState(false)
+  const [lcConnecting, setLcConnecting] = useState(false)
   const { register, handleSubmit } = useForm({
     defaultValues: { name: user?.name || '', leetcodeUsername: user?.leetcodeUsername || '' },
   })
@@ -35,6 +39,15 @@ export default function Settings() {
   useEffect(() => {
     applyTheme(theme)
   }, [theme])
+
+  useEffect(() => {
+    leetcodeAPI.getStatus()
+      .then((res) => {
+        setLcConnected(res.data.connected)
+        setLcUsername(res.data.username || '')
+      })
+      .catch(() => {})
+  }, [])
 
   const onUpdateProfile = async (data) => {
     try {
@@ -62,6 +75,49 @@ export default function Settings() {
     }
   }
 
+  const handleLcConnect = async () => {
+    if (!lcUsername.trim()) {
+      toast.error('Enter a LeetCode username')
+      return
+    }
+    setLcConnecting(true)
+    try {
+      const res = await leetcodeAPI.connect(lcUsername.trim())
+      setLcConnected(true)
+      updateUser({ leetcodeUsername: lcUsername.trim() })
+      toast.success(`Connected! Synced ${res.data.syncedCount} problems`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to connect')
+    } finally {
+      setLcConnecting(false)
+    }
+  }
+
+  const handleLcSync = async () => {
+    setLcSyncing(true)
+    try {
+      const res = await leetcodeAPI.sync()
+      toast.success(`Synced ${res.data.syncedCount} problems`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Sync failed')
+    } finally {
+      setLcSyncing(false)
+    }
+  }
+
+  const handleLcDisconnect = async () => {
+    if (!window.confirm('Disconnect your LeetCode account?')) return
+    try {
+      await leetcodeAPI.disconnect()
+      setLcConnected(false)
+      setLcUsername('')
+      updateUser({ leetcodeUsername: null })
+      toast.success('LeetCode disconnected')
+    } catch {
+      toast.error('Failed to disconnect')
+    }
+  }
+
   return (
     <div className="space-y-6 max-w-2xl">
       <PageHeader title="Settings" description="Manage your account preferences" />
@@ -86,6 +142,49 @@ export default function Settings() {
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
         <div className="flex items-center gap-3 mb-6">
+          <LinkIcon size={18} className="text-primary-400" />
+          <h3 className="font-semibold">LeetCode Connection</h3>
+        </div>
+
+        {lcConnected ? (
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 p-3 rounded-xl bg-green-500/10 border border-green-500/20">
+              <CheckCircle size={16} className="text-green-400" />
+              <span className="text-green-400 text-sm font-medium">Connected as <strong>{lcUsername}</strong></span>
+            </div>
+            <div className="flex gap-3">
+              <Button onClick={handleLcSync} disabled={lcSyncing} variant="secondary">
+                <RefreshCw size={16} className={lcSyncing ? 'animate-spin' : ''} />
+                {lcSyncing ? 'Syncing...' : 'Sync Data'}
+              </Button>
+              <Button onClick={handleLcDisconnect} className="bg-red-600 hover:bg-red-700">
+                <Unlink size={16} />
+                Disconnect
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <p className="text-dark-400 text-sm">Connect your LeetCode account to sync your solved problems and submissions.</p>
+            <div className="flex gap-3">
+              <input
+                type="text"
+                value={lcUsername}
+                onChange={(e) => setLcUsername(e.target.value)}
+                className="input flex-1"
+                placeholder="Enter your LeetCode username"
+                onKeyDown={(e) => e.key === 'Enter' && handleLcConnect()}
+              />
+              <Button onClick={handleLcConnect} disabled={lcConnecting}>
+                {lcConnecting ? 'Connecting...' : 'Connect'}
+              </Button>
+            </div>
+          </div>
+        )}
+      </motion.div>
+
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
+        <div className="flex items-center gap-3 mb-6">
           <Key size={18} className="text-primary-400" />
           <h3 className="font-semibold">API Keys</h3>
         </div>
@@ -105,7 +204,7 @@ export default function Settings() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card p-6">
         <div className="flex items-center gap-3 mb-6">
           <SettingsIcon size={18} className="text-primary-400" />
           <h3 className="font-semibold">Appearance</h3>
@@ -124,7 +223,7 @@ export default function Settings() {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="card p-6 border-red-400/20">
+      <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="card p-6 border-red-400/20">
         <div className="flex items-center gap-3 mb-4">
           <Trash2 size={18} className="text-red-400" />
           <h3 className="font-semibold text-red-400">Danger Zone</h3>

@@ -14,6 +14,7 @@ const problemRoutes = require("./routes/problems");
 const submissionRoutes = require("./routes/submissions");
 const aiRoutes = require("./routes/ai");
 const dashboardRoutes = require("./routes/dashboard");
+const leetcodeRoutes = require("./routes/leetcode");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -36,6 +37,7 @@ app.use("/api/problems", problemRoutes);
 app.use("/api/submissions", submissionRoutes);
 app.use("/api/ai", aiRoutes);
 app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/leetcode", leetcodeRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
