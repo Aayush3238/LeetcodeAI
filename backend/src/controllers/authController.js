@@ -41,7 +41,7 @@ const login = async (req, res, next) => {
     }
 
     if (!user.password) {
-      return res.status(401).json({ message: "This account uses Google login. Please sign in with Google." });
+      return res.status(401).json({ message: "This account uses social login. Please sign in with Google or GitHub." });
     }
 
     const isValidPassword = await bcrypt.compare(data.password, user.password);
@@ -59,6 +59,17 @@ const login = async (req, res, next) => {
 };
 
 const googleCallback = async (req, res) => {
+  try {
+    const token = generateToken(req.user.id);
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
+  } catch (error) {
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    res.redirect(`${frontendUrl}/login?error=auth_failed`);
+  }
+};
+
+const githubCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.id);
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
@@ -98,4 +109,4 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, googleCallback, getProfile, updateProfile, deleteAccount };
+module.exports = { signup, login, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount };

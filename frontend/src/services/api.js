@@ -85,4 +85,12 @@ export const leetcodeAPI = {
   disconnect: () => api.post('/leetcode/disconnect'),
 }
 
+export const githubAPI = {
+  getStatus: () => api.get('/github/status'),
+  getRepos: () => api.get('/github/repos'),
+  getStats: () => api.get('/github/stats'),
+  getRepoStats: (owner, repo) => api.get(`/github/repo/${owner}/${repo}`),
+  disconnect: () => api.post('/github/disconnect'),
+}
+
 export default api
