@@ -16,7 +16,7 @@ export default function Login() {
   const onSubmit = async (data) => {
     try {
       const res = await authAPI.login(data)
-      setAuth(res.data.user, res.data.token)
+      setAuth(res.data.user, res.data.token, res.data.refreshToken)
       toast.success('Welcome back!')
       navigate('/dashboard')
     } catch (err) {

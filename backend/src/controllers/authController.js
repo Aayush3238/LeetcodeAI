@@ -1,6 +1,6 @@
 const bcrypt = require("bcryptjs");
 const prisma = require("../config/db");
-const { generateToken } = require("../middleware/auth");
+const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
 
 const userSelect = {
@@ -36,7 +36,8 @@ const signup = async (req, res, next) => {
     });
 
     const token = generateToken(user.id);
-    res.status(201).json({ user, token });
+    const refreshToken = await generateRefreshToken(user.id);
+    res.status(201).json({ user, token, refreshToken });
   } catch (error) {
     next(error);
   }
@@ -65,9 +66,10 @@ const login = async (req, res, next) => {
     }
 
     const token = generateToken(user.id);
+    const refreshToken = await generateRefreshToken(user.id);
     const { password: _, ...userWithoutPassword } = user;
 
-    res.json({ user: userWithoutPassword, token });
+    res.json({ user: userWithoutPassword, token, refreshToken });
   } catch (error) {
     next(error);
   }
@@ -100,8 +102,9 @@ const setPassword = async (req, res, next) => {
 const googleCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.id);
+    const refreshToken = await generateRefreshToken(req.user.id);
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
+    res.redirect(`${frontendUrl}/oauth/callback?token=${token}&refreshToken=${refreshToken}`);
   } catch (error) {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     res.redirect(`${frontendUrl}/login?error=auth_failed`);
@@ -111,8 +114,9 @@ const googleCallback = async (req, res) => {
 const githubCallback = async (req, res) => {
   try {
     const token = generateToken(req.user.id);
+    const refreshToken = await generateRefreshToken(req.user.id);
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
-    res.redirect(`${frontendUrl}/oauth/callback?token=${token}`);
+    res.redirect(`${frontendUrl}/oauth/callback?token=${token}&refreshToken=${refreshToken}`);
   } catch (error) {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     res.redirect(`${frontendUrl}/login?error=auth_failed`);

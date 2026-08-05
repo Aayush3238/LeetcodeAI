@@ -10,6 +10,7 @@ export default function OAuthCallback() {
 
   useEffect(() => {
     const token = searchParams.get('token')
+    const refreshToken = searchParams.get('refreshToken')
     const error = searchParams.get('error')
 
     if (error) {
@@ -19,7 +20,7 @@ export default function OAuthCallback() {
     }
 
     if (token) {
-      setAuth(null, token)
+      setAuth(null, token, refreshToken)
       window.location.href = '/dashboard'
     } else {
       toast.error('No token received')

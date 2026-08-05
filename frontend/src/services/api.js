@@ -14,8 +14,30 @@ api.interceptors.request.use((config) => {
 
 api.interceptors.response.use(
   (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
+  async (error) => {
+    const originalRequest = error.config
+
+    if (error.response?.status === 401 && error.response?.data?.code === 'TOKEN_EXPIRED' && !originalRequest._retry) {
+      originalRequest._retry = true
+      const { refreshToken, setToken, logout } = useAuthStore.getState()
+
+      if (refreshToken) {
+        try {
+          const res = await axios.post('/api/auth/refresh', { refreshToken })
+          setToken(res.data.accessToken)
+          originalRequest.headers.Authorization = `Bearer ${res.data.accessToken}`
+          return api(originalRequest)
+        } catch {
+          logout()
+          window.location.href = '/login'
+        }
+      } else {
+        logout()
+        window.location.href = '/login'
+      }
+    }
+
+    if (error.response?.status === 401 && !error.response?.data?.code) {
       useAuthStore.getState().logout()
       window.location.href = '/login'
     }

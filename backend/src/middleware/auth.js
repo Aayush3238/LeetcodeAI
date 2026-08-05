@@ -1,4 +1,5 @@
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const prisma = require("../config/db");
 
 const authenticate = async (req, res, next) => {
@@ -26,7 +27,7 @@ const authenticate = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid token" });
     }
     if (error.name === "TokenExpiredError") {
-      return res.status(401).json({ message: "Token expired" });
+      return res.status(401).json({ message: "Token expired", code: "TOKEN_EXPIRED" });
     }
     next(error);
   }
@@ -38,4 +39,52 @@ const generateToken = (userId) => {
   });
 };
 
-module.exports = { authenticate, generateToken };
+const generateAccessToken = (userId) => {
+  return jwt.sign({ userId, type: "access" }, process.env.JWT_SECRET, {
+    expiresIn: "15m",
+  });
+};
+
+const generateRefreshToken = async (userId) => {
+  const token = jwt.sign({ userId, type: "refresh" }, process.env.JWT_SECRET, {
+    expiresIn: "30d",
+  });
+
+  await prisma.refreshToken.create({
+    data: {
+      userId,
+      token,
+      expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+    },
+  });
+
+  return token;
+};
+
+const refreshAccessToken = async (refreshToken) => {
+  const decoded = jwt.verify(refreshToken, process.env.JWT_SECRET);
+
+  if (decoded.type !== "refresh") {
+    throw new Error("Invalid token type");
+  }
+
+  const stored = await prisma.refreshToken.findUnique({
+    where: { token: refreshToken },
+  });
+
+  if (!stored || stored.expiresAt < new Date()) {
+    if (stored) {
+      await prisma.refreshToken.delete({ where: { id: stored.id } });
+    }
+    throw new Error("Refresh token expired or invalid");
+  }
+
+  const newAccessToken = generateAccessToken(decoded.userId);
+  return { accessToken: newAccessToken, userId: decoded.userId };
+};
+
+const revokeRefreshToken = async (token) => {
+  await prisma.refreshToken.deleteMany({ where: { token } });
+};
+
+module.exports = { authenticate, generateToken, generateAccessToken, generateRefreshToken, refreshAccessToken, revokeRefreshToken };
