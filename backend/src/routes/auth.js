@@ -1,6 +1,6 @@
 const express = require("express");
 const passport = require("passport");
-const { signup, login, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount } = require("../controllers/authController");
+const { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount } = require("../controllers/authController");
 const { authenticate } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiter");
 
@@ -8,6 +8,7 @@ const router = express.Router();
 
 router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
+router.post("/set-password", authenticate, setPassword);
 
 router.get("/google", passport.authenticate("google", { scope: ["profile", "email"], prompt: "select_account" }));
 router.get(

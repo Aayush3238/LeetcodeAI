@@ -17,6 +17,17 @@ const userSelect = {
 const signup = async (req, res, next) => {
   try {
     const data = signupSchema.parse(req.body);
+
+    const existing = await prisma.user.findUnique({ where: { email: data.email } });
+    if (existing) {
+      if (!existing.password) {
+        return res.status(409).json({
+          message: "An account with this email exists via social login. Please sign in with Google or GitHub, then set a password in Settings.",
+        });
+      }
+      return res.status(409).json({ message: "An account with this email already exists" });
+    }
+
     const hashedPassword = await bcrypt.hash(data.password, 12);
 
     const user = await prisma.user.create({
@@ -41,7 +52,11 @@ const login = async (req, res, next) => {
     }
 
     if (!user.password) {
-      return res.status(401).json({ message: "This account uses social login. Please sign in with Google or GitHub." });
+      const methods = [];
+      if (user.googleId) methods.push("Google");
+      if (user.githubId) methods.push("GitHub");
+      const methodStr = methods.length > 0 ? methods.join(" or ") : "social login";
+      return res.status(401).json({ message: `This account uses ${methodStr}. Please sign in with your connected provider.` });
     }
 
     const isValidPassword = await bcrypt.compare(data.password, user.password);
@@ -53,6 +68,30 @@ const login = async (req, res, next) => {
     const { password: _, ...userWithoutPassword } = user;
 
     res.json({ user: userWithoutPassword, token });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const setPassword = async (req, res, next) => {
+  try {
+    const { password } = req.body;
+    if (!password || typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { password: hashedPassword },
+    });
+
+    res.json({ message: "Password set successfully" });
   } catch (error) {
     next(error);
   }
@@ -109,4 +148,4 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount };
+module.exports = { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount };

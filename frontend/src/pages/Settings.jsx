@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
 import { authAPI, leetcodeAPI, githubAPI } from '../services/api'
 import { PageHeader, Button } from '../components/ui'
-import { Settings as SettingsIcon, User, Key, Trash2, Moon, Sun, Link as LinkIcon, Unlink, RefreshCw, CheckCircle, GitBranch } from 'lucide-react'
+import { Settings as SettingsIcon, User, Key, Trash2, Moon, Sun, Link as LinkIcon, Unlink, RefreshCw, CheckCircle, GitBranch, Shield } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 function getStoredTheme() {
@@ -35,6 +35,8 @@ export default function Settings() {
   const [lcLastSynced, setLcLastSynced] = useState(null)
   const [ghConnected, setGhConnected] = useState(false)
   const [ghConnecting, setGhConnecting] = useState(false)
+  const [newPassword, setNewPassword] = useState('')
+  const [settingPassword, setSettingPassword] = useState(false)
   const { register, handleSubmit } = useForm({
     defaultValues: { name: user?.name || '', leetcodeUsername: user?.leetcodeUsername || '' },
   })
@@ -143,6 +145,25 @@ export default function Settings() {
     }
   }
 
+  const handleSetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters')
+      return
+    }
+    setSettingPassword(true)
+    try {
+      await authAPI.setPassword(newPassword)
+      toast.success('Password set! You can now sign in with email/password too.')
+      setNewPassword('')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to set password')
+    } finally {
+      setSettingPassword(false)
+    }
+  }
+
+  const isOAuthUser = !!user?.googleId || !!user?.githubId
+
   return (
     <div className="space-y-6 max-w-2xl">
       <PageHeader title="Settings" description="Manage your account preferences" />
@@ -164,6 +185,29 @@ export default function Settings() {
           <Button type="submit">Save Changes</Button>
         </form>
       </motion.div>
+
+      {isOAuthUser && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="card p-6">
+          <div className="flex items-center gap-3 mb-6">
+            <Shield size={18} className="text-primary-400" />
+            <h3 className="font-semibold">Set Password</h3>
+          </div>
+          <p className="text-dark-400 text-sm mb-4">You signed in with a social provider. Set a password to also enable email/password login.</p>
+          <div className="flex gap-3">
+            <input
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              className="input flex-1"
+              placeholder="New password (min 6 characters)"
+              onKeyDown={(e) => e.key === 'Enter' && handleSetPassword()}
+            />
+            <Button onClick={handleSetPassword} disabled={settingPassword}>
+              {settingPassword ? 'Setting...' : 'Set Password'}
+            </Button>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6">
         <div className="flex items-center gap-3 mb-6">
