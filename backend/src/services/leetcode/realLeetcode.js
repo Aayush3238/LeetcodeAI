@@ -254,12 +254,9 @@ class LeetCodeService {
         });
       }
 
-      const existingSub = await prisma.submission.findFirst({
-        where: {
-          userId,
-          problemId: problem.id,
-          code: `leetcode-sync-${sub.id}`,
-        },
+      const subId = String(sub.id);
+      const existingSub = await prisma.submission.findUnique({
+        where: { leetcodeSubmissionId: subId },
       });
 
       if (!existingSub) {
@@ -267,9 +264,10 @@ class LeetCodeService {
           data: {
             userId,
             problemId: problem.id,
-            code: `leetcode-sync-${sub.id}`,
+            code: `leetcode-sync-${subId}`,
             language: sub.lang || "unknown",
             status: "Accepted",
+            leetcodeSubmissionId: subId,
             submissionTime: new Date(parseInt(sub.timestamp) * 1000),
           },
         });
