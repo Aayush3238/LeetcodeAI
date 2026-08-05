@@ -1,4 +1,5 @@
 const prisma = require("../config/db");
+const { mapTagToTopic } = require("../../utils/topicMapper");
 let redis;
 try {
   redis = require("../config/redis");
@@ -239,7 +240,7 @@ class LeetCodeService {
       if (!problem) {
         const details = await fetchProblemDetails(sub.titleSlug);
         const tags = details?.topicTags?.map((t) => t.name) || [];
-        const primaryTag = tags[0] || "Unknown";
+        const topic = mapTagToTopic(tags);
 
         problem = await prisma.problem.create({
           data: {
@@ -247,7 +248,7 @@ class LeetCodeService {
             title: sub.title,
             titleSlug: sub.titleSlug,
             difficulty: details?.difficulty || "Medium",
-            topic: primaryTag,
+            topic,
             tags,
             acceptance: details?.acRate || null,
           },
