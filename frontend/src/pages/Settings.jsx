@@ -76,24 +76,24 @@ function ProfileTab() {
     <div className="space-y-6">
       <form onSubmit={handleSubmit(onUpdateProfile)} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-dark-300 mb-2">Name</label>
+          <label className="block text-sm font-medium text-dark-300 text-gray-600 mb-2">Name</label>
           <input {...register('name', { required: true })} className="input w-full" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-dark-300 mb-2">Email</label>
+          <label className="block text-sm font-medium text-dark-300 text-gray-600 mb-2">Email</label>
           <input value={user?.email || ''} disabled className="input w-full opacity-50" />
-          <p className="text-dark-500 text-xs mt-1">Email cannot be changed</p>
+          <p className="text-dark-500 text-gray-400 text-xs mt-1">Email cannot be changed</p>
         </div>
         <Button type="submit">Save Changes</Button>
       </form>
 
       {isOAuthUser && (
-        <div className="border-t border-dark-700 pt-6">
+        <div className="border-t border-dark-700 border-gray-200 pt-6">
           <div className="flex items-center gap-3 mb-4">
             <Shield size={18} className="text-primary-400" />
             <h3 className="font-semibold">Set Password</h3>
           </div>
-          <p className="text-dark-400 text-sm mb-4">You signed in with a social provider. Set a password to also enable email/password login.</p>
+          <p className="text-dark-400 text-gray-500 text-sm mb-4">You signed in with a social provider. Set a password to also enable email/password login.</p>
           <div className="flex gap-3">
             <input
               type="password"
@@ -198,8 +198,9 @@ function ConnectionsTab() {
     <div className="space-y-6">
       <div>
         <div className="flex items-center gap-3 mb-4">
-          <LinkIcon size={18} className="text-primary-400" />
+            <LinkIcon size={18} className="text-primary-400" />
           <h3 className="font-semibold">LeetCode</h3>
+        </div>
         </div>
         {lcConnected ? (
           <div className="space-y-3">
@@ -208,7 +209,7 @@ function ConnectionsTab() {
               <span className="text-green-400 text-sm font-medium">Connected as <strong>{lcUsername}</strong></span>
             </div>
             {lcLastSynced && (
-              <p className="text-dark-500 text-xs">Last synced: {new Date(lcLastSynced).toLocaleString()}</p>
+              <p className="text-dark-500 text-gray-400 text-xs">Last synced: {new Date(lcLastSynced).toLocaleString()}</p>
             )}
             <div className="flex gap-3">
               <Button onClick={handleLcSync} disabled={lcSyncing} variant="secondary">
@@ -223,7 +224,7 @@ function ConnectionsTab() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-dark-400 text-sm">Sync your solved problems and submissions.</p>
+            <p className="text-dark-400 text-gray-500 text-sm">Sync your solved problems and submissions.</p>
             <div className="flex gap-3">
               <input
                 type="text"
@@ -241,7 +242,7 @@ function ConnectionsTab() {
         )}
       </div>
 
-      <div className="border-t border-dark-700 pt-6">
+      <div className="border-t border-dark-700 border-gray-200 pt-6">
         <div className="flex items-center gap-3 mb-4">
           <GitBranch size={18} className="text-primary-400" />
           <h3 className="font-semibold">GitHub</h3>
@@ -252,7 +253,7 @@ function ConnectionsTab() {
               <CheckCircle size={16} className="text-green-400" />
               <span className="text-green-400 text-sm font-medium">GitHub connected</span>
             </div>
-            <p className="text-dark-400 text-sm">Repos and contribution data available for AI analysis.</p>
+            <p className="text-dark-400 text-gray-500 text-sm">Repos and contribution data available for AI analysis.</p>
             <Button onClick={handleGithubDisconnect} className="bg-red-600 hover:bg-red-700">
               <Unlink size={16} />
               Disconnect
@@ -260,7 +261,7 @@ function ConnectionsTab() {
           </div>
         ) : (
           <div className="space-y-3">
-            <p className="text-dark-400 text-sm">Analyze your repositories and coding patterns.</p>
+            <p className="text-dark-400 text-gray-500 text-sm">Analyze your repositories and coding patterns.</p>
             <Button onClick={handleGithubConnect}>
               <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
                 <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
@@ -285,7 +286,7 @@ function ApiKeysTab() {
   return (
     <div className="space-y-4">
       <div>
-        <label className="block text-sm font-medium text-dark-300 mb-2">OpenAI API Key</label>
+        <label className="block text-sm font-medium text-dark-300 text-gray-600 mb-2">OpenAI API Key</label>
         <input
           type="password"
           value={apiKey}
@@ -293,7 +294,7 @@ function ApiKeysTab() {
           className="input w-full"
           placeholder="sk-..."
         />
-        <p className="text-dark-500 text-xs mt-1">Stored in your browser's localStorage. Used for AI coaching features.</p>
+        <p className="text-dark-500 text-gray-400 text-xs mt-1">Stored in your browser's localStorage. Used for AI coaching features.</p>
       </div>
       <Button variant="secondary" onClick={onSaveApiKey}>Save API Key</Button>
     </div>
@@ -309,13 +310,13 @@ function AppearanceTab() {
 
   return (
     <div className="space-y-4">
-      <p className="text-dark-400 text-sm">Choose your preferred theme.</p>
+      <p className="text-dark-400 text-gray-500 text-sm">Choose your preferred theme.</p>
       <div className="flex gap-3">
         {['dark', 'light'].map((t) => (
           <button
             key={t}
             onClick={() => setTheme(t)}
-            className={`flex items-center gap-2 px-6 py-4 rounded-xl border transition-all ${theme === t ? 'border-primary-500 bg-primary-600/10' : 'border-dark-700 hover:border-dark-600'}`}
+            className={`flex items-center gap-2 px-6 py-4 rounded-xl border transition-all ${theme === t ? 'border-primary-500 bg-primary-600/10' : 'border-dark-700 border-gray-200 hover:border-dark-600 hover:border-gray-300'}`}
           >
             {t === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
             <span className="capitalize font-medium">{t}</span>
@@ -344,7 +345,7 @@ function AccountTab() {
     <div className="space-y-4">
       <div className="p-4 rounded-xl border border-red-400/30 bg-red-400/5">
         <h3 className="font-semibold text-red-400 mb-2">Delete Account</h3>
-        <p className="text-dark-400 text-sm mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
+        <p className="text-dark-400 text-gray-500 text-sm mb-4">Permanently delete your account and all associated data. This action cannot be undone.</p>
         <Button onClick={handleDeleteAccount} className="bg-red-600 hover:bg-red-700">
           <Trash2 size={16} />
           Delete Account
@@ -370,10 +371,10 @@ export default function Settings() {
     <div className="max-w-3xl">
       <div className="mb-6">
         <h1 className="text-2xl font-bold">Settings</h1>
-        <p className="text-dark-400 mt-1">Manage your account preferences</p>
+        <p className="text-dark-400 text-gray-500 mt-1">Manage your account preferences</p>
       </div>
 
-      <div className="flex gap-1 mb-6 p-1 bg-dark-900/50 rounded-xl border border-dark-800 overflow-x-auto">
+      <div className="flex gap-1 mb-6 p-1 bg-dark-900/50 bg-gray-100 rounded-xl border border-dark-800 border-gray-200 overflow-x-auto">
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -381,7 +382,7 @@ export default function Settings() {
             className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
               activeTab === id
                 ? 'bg-primary-600/20 text-primary-400'
-                : 'text-dark-400 hover:text-dark-200 hover:bg-dark-800'
+                : 'text-dark-400 text-gray-500 hover:text-dark-200 hover:text-gray-800 hover:bg-dark-800 hover:bg-gray-200'
             }`}
           >
             <Icon size={16} />

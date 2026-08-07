@@ -25,7 +25,7 @@ export default function Layout() {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-dark-800">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-dark-800 dark:border-dark-800 border-gray-200">
         <div className="w-9 h-9 rounded-xl bg-primary-600 flex items-center justify-center">
           <span className="text-white font-bold text-sm">LC</span>
         </div>
@@ -53,8 +53,8 @@ export default function Layout() {
         })}
       </nav>
 
-      <div className="px-3 py-4 border-t border-dark-800">
-        <button onClick={handleLogout} className="sidebar-link w-full text-red-400 hover:text-red-300 hover:bg-red-400/10">
+      <div className="px-3 py-4 border-t border-dark-800 dark:border-dark-800 border-gray-200">
+        <button onClick={handleLogout} className="sidebar-link w-full text-red-400 dark:text-red-400 text-red-500 hover:text-red-300 dark:hover:text-red-300 hover:text-red-600 hover:bg-red-400/10 dark:hover:bg-red-400/10 hover:bg-red-50">
           <LogOut size={20} />
           {!collapsed && <span>Logout</span>}
         </button>
@@ -63,9 +63,9 @@ export default function Layout() {
   )
 
   return (
-    <div className="flex h-screen bg-dark-950">
+    <div className="flex h-screen bg-dark-950 dark:bg-dark-950 bg-gray-50">
       {/* Desktop Sidebar */}
-      <aside className={`hidden lg:flex flex-col border-r border-dark-800 bg-dark-900/50 transition-all duration-300 ${collapsed ? 'w-[72px]' : 'w-64'}`}>
+      <aside className={`hidden lg:flex flex-col border-r border-dark-800 dark:border-dark-800 border-gray-200 bg-dark-900/50 dark:bg-dark-900/50 bg-white/50 transition-all duration-300 ${collapsed ? 'w-[72px]' : 'w-64'}`}>
         <SidebarContent />
       </aside>
 
@@ -84,7 +84,7 @@ export default function Layout() {
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              className="fixed left-0 top-0 bottom-0 w-64 bg-dark-900 border-r border-dark-800 z-50 lg:hidden"
+              className="fixed left-0 top-0 bottom-0 w-64 bg-dark-900 dark:bg-dark-900 bg-white border-r border-dark-800 dark:border-dark-800 border-gray-200 z-50 lg:hidden"
             >
               <SidebarContent />
             </motion.aside>
@@ -94,19 +94,19 @@ export default function Layout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-dark-800 bg-dark-900/30 backdrop-blur-xl">
+        <header className="flex items-center justify-between px-6 py-4 border-b border-dark-800 dark:border-dark-800 border-gray-200 bg-dark-900/30 dark:bg-dark-900/30 bg-white/30 backdrop-blur-xl">
           <div className="flex items-center gap-4">
-            <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 hover:bg-dark-800 rounded-xl">
+            <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 hover:bg-dark-800 dark:hover:bg-dark-800 hover:bg-gray-100 rounded-xl">
               <Menu size={20} />
             </button>
-            <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:block p-2 hover:bg-dark-800 rounded-xl">
+            <button onClick={() => setCollapsed(!collapsed)} className="hidden lg:block p-2 hover:bg-dark-800 dark:hover:bg-dark-800 hover:bg-gray-100 rounded-xl">
               <ChevronLeft size={20} className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
             </button>
           </div>
 
           <div className="flex items-center gap-4">
             <div className="relative hidden sm:block">
-              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500" />
+              <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500 dark:text-dark-500 text-gray-400" />
               <input
                 type="text"
                 placeholder="Search problems..."

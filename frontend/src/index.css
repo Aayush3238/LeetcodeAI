@@ -10,11 +10,24 @@
   body {
     @apply bg-dark-950 text-dark-50;
   }
+
+  .light body,
+  .light {
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  .light * {
+    @apply border-gray-200;
+  }
 }
 
 @layer components {
   .glass {
     @apply bg-dark-900/50 backdrop-blur-xl border border-dark-700/50;
+  }
+
+  .light .glass {
+    @apply bg-white/70 border-gray-200/50;
   }
 
   .glass-card {
@@ -29,44 +42,88 @@
     @apply bg-dark-800 hover:bg-dark-700 text-dark-100 font-medium px-4 py-2 rounded-xl transition-all duration-200 border border-dark-700;
   }
 
+  .light .btn-secondary {
+    @apply bg-gray-100 hover:bg-gray-200 text-gray-700 border-gray-300;
+  }
+
   .btn-ghost {
     @apply hover:bg-dark-800 text-dark-300 hover:text-dark-100 font-medium px-4 py-2 rounded-xl transition-all duration-200;
+  }
+
+  .light .btn-ghost {
+    @apply hover:bg-gray-100 text-gray-500 hover:text-gray-700;
   }
 
   .input {
     @apply bg-dark-800 border border-dark-700 rounded-xl px-4 py-2.5 text-dark-100 placeholder:text-dark-500 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all;
   }
 
+  .light .input {
+    @apply bg-white border-gray-300 text-gray-900 placeholder:text-gray-400;
+  }
+
   .card {
     @apply bg-dark-900 border border-dark-800 rounded-2xl;
+  }
+
+  .light .card {
+    @apply bg-white border-gray-200;
   }
 
   .stat-card {
     @apply card p-6 hover:border-dark-700 transition-all duration-200;
   }
 
+  .light .stat-card {
+    @apply hover:border-gray-300;
+  }
+
   .sidebar-link {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-dark-400 hover:text-dark-100 hover:bg-dark-800 transition-all duration-200;
+  }
+
+  .light .sidebar-link {
+    @apply text-gray-500 hover:text-gray-900 hover:bg-gray-100;
   }
 
   .sidebar-link-active {
     @apply flex items-center gap-3 px-3 py-2.5 rounded-xl text-primary-400 bg-primary-600/10 border border-primary-600/20;
   }
 
+  .light .sidebar-link-active {
+    @apply text-primary-600 bg-primary-50 border-primary-200;
+  }
+
   .difficulty-easy {
     @apply text-green-400 bg-green-400/10 px-2 py-0.5 rounded-md text-sm font-medium;
+  }
+
+  .light .difficulty-easy {
+    @apply text-green-600 bg-green-50;
   }
 
   .difficulty-medium {
     @apply text-yellow-400 bg-yellow-400/10 px-2 py-0.5 rounded-md text-sm font-medium;
   }
 
+  .light .difficulty-medium {
+    @apply text-yellow-600 bg-yellow-50;
+  }
+
   .difficulty-hard {
     @apply text-red-400 bg-red-400/10 px-2 py-0.5 rounded-md text-sm font-medium;
   }
 
+  .light .difficulty-hard {
+    @apply text-red-600 bg-red-50;
+  }
+
   .skeleton {
     @apply animate-pulse bg-dark-800 rounded-xl;
+  }
+
+  .light .skeleton {
+    @apply bg-gray-200;
   }
 }
 
@@ -80,6 +137,10 @@
     scrollbar-color: theme('colors.dark.700') transparent;
   }
 
+  .light .scrollbar-thin {
+    scrollbar-color: theme('colors.gray.300') transparent;
+  }
+
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
   }
@@ -91,5 +152,9 @@
   .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: theme('colors.dark.700');
     border-radius: 3px;
+  }
+
+  .light .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: theme('colors.gray.300');
   }
 }

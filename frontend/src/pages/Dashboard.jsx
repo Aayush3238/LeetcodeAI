@@ -55,7 +55,7 @@ export default function Dashboard() {
             <BarChart data={topicDistribution || []}>
               <XAxis dataKey="topic" tick={{ fill: '#94a3b8', fontSize: 12 }} angle={-35} textAnchor="end" height={80} />
               <YAxis tick={{ fill: '#94a3b8' }} />
-              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} />
               <Bar dataKey="count" radius={[6, 6, 0, 0]}>
                 {(topicDistribution || []).map((_, i) => (
                   <Cell key={i} fill={COLORS[i % COLORS.length]} />
@@ -74,7 +74,7 @@ export default function Dashboard() {
                   <Cell key={i} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px' }} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} />
             </PieChart>
           </ResponsiveContainer>
           <div className="flex justify-center gap-6 mt-2">
@@ -92,9 +92,9 @@ export default function Dashboard() {
         <h3 className="text-lg font-semibold mb-4">Recently Solved</h3>
         <div className="space-y-3">
           {(recentProblems || []).map((p) => (
-            <div key={p.leetcodeId} className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50 hover:bg-dark-800 transition-colors">
+            <div key={p.leetcodeId} className="flex items-center justify-between p-3 rounded-xl bg-dark-800/50 dark:bg-dark-800/50 bg-gray-100 hover:bg-dark-800 dark:hover:bg-dark-800 hover:bg-gray-200 transition-colors">
               <div className="flex items-center gap-3">
-                <span className="text-dark-500 text-sm">#{p.leetcodeId}</span>
+                <span className="text-dark-500 dark:text-dark-500 text-gray-400 text-sm">#{p.leetcodeId}</span>
                 <span className="font-medium">{p.title}</span>
               </div>
               <span className={`difficulty-${p.difficulty.toLowerCase()}`}>{p.difficulty}</span>

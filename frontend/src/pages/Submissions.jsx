@@ -20,7 +20,7 @@ function AnalysisModal({ submission, onClose }) {
       <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="card p-6 max-w-2xl w-full max-h-[80vh] overflow-y-auto scrollbar-thin" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-xl font-bold">AI Code Review</h3>
-          <button onClick={onClose} className="p-2 hover:bg-dark-800 rounded-xl"><X size={18} /></button>
+          <button onClick={onClose} className="p-2 hover:bg-dark-800 hover:bg-gray-200 rounded-xl"><X size={18} /></button>
         </div>
 
         {isPending ? (
@@ -30,28 +30,28 @@ function AnalysisModal({ submission, onClose }) {
         ) : analysis ? (
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-dark-800 rounded-xl">
-                <p className="text-dark-400 text-sm">Time Complexity</p>
+              <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+                <p className="text-dark-400 text-gray-500 text-sm">Time Complexity</p>
                 <p className="font-mono text-green-400 mt-1">{analysis.timeComplexity}</p>
               </div>
-              <div className="p-4 bg-dark-800 rounded-xl">
-                <p className="text-dark-400 text-sm">Space Complexity</p>
+              <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+                <p className="text-dark-400 text-gray-500 text-sm">Space Complexity</p>
                 <p className="font-mono text-yellow-400 mt-1">{analysis.spaceComplexity}</p>
               </div>
             </div>
 
-            <div className="p-4 bg-dark-800 rounded-xl">
-              <p className="text-dark-400 text-sm mb-2">Overall Score</p>
+            <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+              <p className="text-dark-400 text-gray-500 text-sm mb-2">Overall Score</p>
               <div className="flex items-center gap-3">
-                <div className="flex-1 h-3 bg-dark-700 rounded-full overflow-hidden">
+                <div className="flex-1 h-3 bg-dark-700 bg-gray-200 rounded-full overflow-hidden">
                   <div className="h-full bg-primary-500 rounded-full" style={{ width: `${analysis.overallScore}%` }} />
                 </div>
                 <span className="font-bold text-lg text-primary-400">{analysis.overallScore}/100</span>
               </div>
             </div>
 
-            <div className="p-4 bg-dark-800 rounded-xl">
-              <p className="text-dark-400 text-sm mb-2">Optimization Suggestions</p>
+            <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+              <p className="text-dark-400 text-gray-500 text-sm mb-2">Optimization Suggestions</p>
               <ul className="space-y-2">
                 {(analysis.optimizations || []).map((opt, i) => (
                   <li key={i} className="flex items-start gap-2 text-sm">
@@ -62,8 +62,8 @@ function AnalysisModal({ submission, onClose }) {
               </ul>
             </div>
 
-            <div className="p-4 bg-dark-800 rounded-xl">
-              <p className="text-dark-400 text-sm mb-2">Edge Cases</p>
+            <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+              <p className="text-dark-400 text-gray-500 text-sm mb-2">Edge Cases</p>
               <div className="flex flex-wrap gap-2">
                 {(analysis.edgeCases || []).map((ec, i) => (
                   <Badge key={i} variant="warning">{ec}</Badge>
@@ -71,18 +71,18 @@ function AnalysisModal({ submission, onClose }) {
               </div>
             </div>
 
-            <div className="p-4 bg-dark-800 rounded-xl">
-              <p className="text-dark-400 text-sm mb-1">Code Readability</p>
+            <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+              <p className="text-dark-400 text-gray-500 text-sm mb-1">Code Readability</p>
               <p className="text-sm">{analysis.readability}</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="p-4 bg-dark-800 rounded-xl">
-                <p className="text-dark-400 text-sm">Pattern</p>
+              <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+                <p className="text-dark-400 text-gray-500 text-sm">Pattern</p>
                 <Badge variant="primary" className="mt-1">{analysis.pattern}</Badge>
               </div>
-              <div className="p-4 bg-dark-800 rounded-xl">
-                <p className="text-dark-400 text-sm">Difficulty Level</p>
+              <div className="p-4 bg-dark-800 bg-gray-100 rounded-xl">
+                <p className="text-dark-400 text-gray-500 text-sm">Difficulty Level</p>
                 <Badge className="mt-1">{analysis.difficulty}</Badge>
               </div>
             </div>
@@ -102,14 +102,14 @@ function SubmissionRow({ submission, onAnalyze }) {
   const p = submission.problem
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-dark-800/50">
-      <div className="flex items-center px-6 py-4 hover:bg-dark-800/30 transition-colors cursor-pointer" onClick={() => setExpanded(!expanded)}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="border-b border-dark-800/50 border-gray-200/50">
+      <div className="flex items-center px-6 py-4 hover:bg-dark-800/30 hover:bg-gray-100 transition-colors cursor-pointer" onClick={() => setExpanded(!expanded)}>
         <div className="flex-1 min-w-0">
           <p className="font-medium truncate">{p?.title || 'Unknown Problem'}</p>
           <div className="flex items-center gap-3 mt-1">
-            <span className="text-dark-500 text-xs">{submission.language}</span>
-            <span className="text-dark-500 text-xs flex items-center gap-1"><Clock size={12} /> {submission.runtime}ms</span>
-            <span className="text-dark-500 text-xs flex items-center gap-1"><Cpu size={12} /> {submission.memory}MB</span>
+            <span className="text-dark-500 text-gray-400 text-xs">{submission.language}</span>
+            <span className="text-dark-500 text-gray-400 text-xs flex items-center gap-1"><Clock size={12} /> {submission.runtime}ms</span>
+            <span className="text-dark-500 text-gray-400 text-xs flex items-center gap-1"><Cpu size={12} /> {submission.memory}MB</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -118,8 +118,8 @@ function SubmissionRow({ submission, onAnalyze }) {
           ) : (
             <span className="flex items-center gap-1 text-red-400 text-sm"><XCircle size={14} /> {submission.status}</span>
           )}
-          <span className="text-dark-500 text-xs">{formatDate(submission.submissionTime)}</span>
-          {expanded ? <ChevronUp size={16} className="text-dark-500" /> : <ChevronDown size={16} className="text-dark-500" />}
+          <span className="text-dark-500 text-gray-400 text-xs">{formatDate(submission.submissionTime)}</span>
+          {expanded ? <ChevronUp size={16} className="text-dark-500 text-gray-400" /> : <ChevronDown size={16} className="text-dark-500 text-gray-400" />}
         </div>
       </div>
 
@@ -127,7 +127,7 @@ function SubmissionRow({ submission, onAnalyze }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="px-6 pb-4 space-y-4">
-              <pre className="bg-dark-800 rounded-xl p-4 text-sm font-mono text-dark-200 overflow-x-auto scrollbar-thin">{submission.code}</pre>
+              <pre className="bg-dark-800 bg-gray-100 rounded-xl p-4 text-sm font-mono text-dark-200 text-gray-800 overflow-x-auto scrollbar-thin">{submission.code}</pre>
               <Button onClick={(e) => { e.stopPropagation(); onAnalyze(submission) }} variant="secondary">
                 <Bot size={16} className="mr-2" /> Analyze with AI
               </Button>

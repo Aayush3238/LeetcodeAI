@@ -9,10 +9,10 @@ function ChatMessage({ message }) {
   const isUser = message.role === 'user'
   return (
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className={`flex gap-3 ${isUser ? 'flex-row-reverse' : ''}`}>
-      <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-primary-600' : 'bg-dark-700'}`}>
+        <div className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${isUser ? 'bg-primary-600' : 'bg-dark-700 bg-gray-200'}`}>
         {isUser ? <User size={16} /> : <Bot size={16} className="text-primary-400" />}
       </div>
-      <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${isUser ? 'bg-primary-600 text-white' : 'bg-dark-800 text-dark-100'}`}>
+      <div className={`max-w-[70%] rounded-2xl px-4 py-3 ${isUser ? 'bg-primary-600 text-white' : 'bg-dark-800 bg-gray-100 text-dark-100 text-gray-800'}`}>
         <p className="text-sm whitespace-pre-wrap">{message.content}</p>
       </div>
     </motion.div>
@@ -78,7 +78,7 @@ export default function AICoach() {
               <button
                 key={conv.id}
                 onClick={() => setActiveConversation(conv)}
-                className={`w-full text-left p-3 rounded-xl text-sm transition-colors flex items-center gap-2 ${activeConversation?.id === conv.id ? 'bg-primary-600/10 text-primary-400 border border-primary-600/20' : 'hover:bg-dark-800 text-dark-300'}`}
+                className={`w-full text-left p-3 rounded-xl text-sm transition-colors flex items-center gap-2 ${activeConversation?.id === conv.id ? 'bg-primary-600/10 text-primary-400 border border-primary-600/20' : 'hover:bg-dark-800 hover:bg-gray-100 text-dark-300 text-gray-600'}`}
               >
                 <MessageSquare size={14} />
                 <span className="truncate">{conv.title}</span>
@@ -96,7 +96,7 @@ export default function AICoach() {
               <Bot size={32} className="text-primary-400" />
             </div>
             <h3 className="text-xl font-bold mb-2">LeetCoach AI</h3>
-            <p className="text-dark-400 max-w-md mb-6">
+            <p className="text-dark-400 text-gray-500 max-w-md mb-6">
               Ask me anything about algorithms, data structures, or get help understanding your solutions.
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg w-full">
@@ -105,7 +105,7 @@ export default function AICoach() {
                   createMutation.mutate(undefined, {
                     onSuccess: () => setInput(q),
                   })
-                }} className="p-3 rounded-xl bg-dark-800 hover:bg-dark-700 text-left text-sm text-dark-300 transition-colors">
+                }} className="p-3 rounded-xl bg-dark-800 bg-gray-100 hover:bg-dark-700 hover:bg-gray-200 text-left text-sm text-dark-300 text-gray-600 transition-colors">
                   {q}
                 </button>
               ))}
@@ -116,10 +116,10 @@ export default function AICoach() {
             <div className="flex-1 overflow-y-auto scrollbar-thin p-6 space-y-4">
               {(activeConversation.messages || []).length === 0 && (
                 <div className="flex gap-3">
-                  <div className="w-8 h-8 rounded-full bg-dark-700 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-full bg-dark-700 bg-gray-200 flex items-center justify-center">
                     <Bot size={16} className="text-primary-400" />
                   </div>
-                  <div className="bg-dark-800 rounded-2xl px-4 py-3">
+                  <div className="bg-dark-800 bg-gray-100 rounded-2xl px-4 py-3">
                     <p className="text-sm">Hi! I'm LeetCoach AI. How can I help you today?</p>
                   </div>
                 </div>
@@ -134,9 +134,9 @@ export default function AICoach() {
                   </div>
                   <div className="bg-dark-800 rounded-2xl px-4 py-3">
                     <div className="flex gap-1">
-                      <span className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" />
-                      <span className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
-                      <span className="w-2 h-2 bg-dark-500 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                      <span className="w-2 h-2 bg-dark-500 bg-gray-400 rounded-full animate-bounce" />
+                      <span className="w-2 h-2 bg-dark-500 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                      <span className="w-2 h-2 bg-dark-500 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
                     </div>
                   </div>
                 </div>
@@ -144,7 +144,7 @@ export default function AICoach() {
               <div ref={messagesEndRef} />
             </div>
 
-            <div className="p-4 border-t border-dark-800">
+            <div className="p-4 border-t border-dark-800 border-gray-200">
               <div className="flex gap-3">
                 <input
                   value={input}

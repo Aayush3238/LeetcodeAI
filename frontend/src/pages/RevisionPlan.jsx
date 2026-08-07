@@ -43,18 +43,18 @@ export default function RevisionPlan() {
             whileTap={{ scale: 0.98 }}
             onClick={() => { setSelectedPlan(pt.value); generatePlan(pt.value) }}
             disabled={isPending}
-            className={`card p-6 text-left transition-all ${selectedPlan === pt.value ? 'border-primary-500 ring-1 ring-primary-500' : 'hover:border-dark-700'}`}
+            className={`card p-6 text-left transition-all ${selectedPlan === pt.value ? 'border-primary-500 ring-1 ring-primary-500' : 'hover:border-dark-700 hover:border-gray-300'}`}
           >
             <Calendar size={24} className="text-primary-400 mb-3" />
             <h3 className="font-bold text-lg">{pt.label}</h3>
-            <p className="text-dark-400 text-sm mt-1">{pt.description}</p>
+            <p className="text-dark-400 text-gray-500 text-sm mt-1">{pt.description}</p>
           </motion.button>
         ))}
       </div>
 
       {weakTopics.length > 0 && (
         <div className="card p-4">
-          <p className="text-sm text-dark-400 mb-2">Your weak topics:</p>
+          <p className="text-sm text-dark-400 text-gray-500 mb-2">Your weak topics:</p>
           <div className="flex flex-wrap gap-2">
             {weakTopics.map((t) => <Badge key={t} variant="danger">{t}</Badge>)}
           </div>
@@ -69,7 +69,7 @@ export default function RevisionPlan() {
 
       {planData && !isPending && (
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-4">
-          <div className="flex items-center gap-4 text-sm text-dark-400">
+          <div className="flex items-center gap-4 text-sm text-dark-400 text-gray-500">
             <span className="flex items-center gap-1"><Clock size={14} /> {planData.items?.length || 0} days</span>
             <Badge variant="primary">{planData.type}</Badge>
           </div>
@@ -93,7 +93,7 @@ export default function RevisionPlan() {
                   </div>
                   <div className="flex flex-wrap gap-2">
                     {(item.problems || []).map((prob, j) => (
-                      <span key={j} className="text-xs bg-dark-800 text-dark-300 px-2 py-1 rounded-lg">{prob}</span>
+                      <span key={j} className="text-xs bg-dark-800 bg-gray-100 text-dark-300 text-gray-600 px-2 py-1 rounded-lg">{prob}</span>
                     ))}
                   </div>
                 </div>
@@ -101,7 +101,7 @@ export default function RevisionPlan() {
                   {item.completed ? (
                     <CheckCircle size={20} className="text-green-400" />
                   ) : (
-                    <Circle size={20} className="text-dark-600" />
+                    <Circle size={20} className="text-dark-600 text-gray-300" />
                   )}
                 </div>
               </motion.div>
@@ -112,9 +112,9 @@ export default function RevisionPlan() {
 
       {!planData && !isPending && (
         <div className="card p-12 text-center">
-          <Calendar size={48} className="text-dark-600 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-dark-300">Select a Plan Duration</h3>
-          <p className="text-dark-500 mt-1">Choose a plan to generate your personalized revision schedule</p>
+          <Calendar size={48} className="text-dark-600 text-gray-300 mx-auto mb-4" />
+          <h3 className="text-lg font-medium text-dark-300 text-gray-600">Select a Plan Duration</h3>
+          <p className="text-dark-500 text-gray-400 mt-1">Choose a plan to generate your personalized revision schedule</p>
         </div>
       )}
     </div>

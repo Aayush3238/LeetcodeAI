@@ -33,7 +33,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-dark-950 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-dark-950 dark:bg-dark-950 bg-gray-50 px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
