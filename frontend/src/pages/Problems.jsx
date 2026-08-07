@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
 import { problemsAPI } from '../services/api'
 import { PageHeader, Input, Badge, Skeleton } from '../components/ui'
 import { Search, ChevronLeft, ChevronRight, ArrowUpDown } from 'lucide-react'
@@ -8,7 +9,8 @@ import { TOPICS } from '../constants'
 import { getDifficultyColor } from '../utils'
 
 export default function Problems() {
-  const [search, setSearch] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const [search, setSearch] = useState(searchParams.get('search') || '')
   const [difficulty, setDifficulty] = useState('')
   const [topic, setTopic] = useState('')
   const [page, setPage] = useState(1)
