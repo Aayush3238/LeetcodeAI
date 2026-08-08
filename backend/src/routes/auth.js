@@ -1,6 +1,6 @@
 const express = require("express");
 const passport = require("passport");
-const { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount } = require("../controllers/authController");
+const { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount, forgotPassword, resetPassword } = require("../controllers/authController");
 const { authenticate, generateAccessToken, generateRefreshToken, refreshAccessToken, revokeRefreshToken } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiter");
 
@@ -9,6 +9,8 @@ const router = express.Router();
 router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
 router.post("/set-password", authenticate, setPassword);
+router.post("/forgot-password", authLimiter, forgotPassword);
+router.post("/reset-password", authLimiter, resetPassword);
 
 router.post("/refresh", async (req, res) => {
   try {

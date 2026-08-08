@@ -1,4 +1,5 @@
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 const prisma = require("../config/db");
 const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
@@ -152,4 +153,65 @@ const deleteAccount = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount };
+const forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    if (!email || typeof email !== "string") {
+      return res.status(400).json({ message: "Email is required" });
+    }
+
+    const user = await prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      return res.json({ message: "If an account exists, a reset link has been sent." });
+    }
+
+    if (!user.password) {
+      return res.json({ message: "If an account exists, a reset link has been sent." });
+    }
+
+    await prisma.passwordResetToken.deleteMany({ where: { userId: user.id, used: false } });
+
+    const resetToken = crypto.randomBytes(32).toString("hex");
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000);
+
+    await prisma.passwordResetToken.create({
+      data: { userId: user.id, token: resetToken, expiresAt },
+    });
+
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+    const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
+
+    console.log(`[Password Reset] ${user.email}: ${resetUrl}`);
+
+    res.json({ message: "If an account exists, a reset link has been sent." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const resetPassword = async (req, res, next) => {
+  try {
+    const { token, password } = req.body;
+    if (!token || typeof token !== "string") {
+      return res.status(400).json({ message: "Token is required" });
+    }
+    if (!password || typeof password !== "string" || password.length < 6) {
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    const resetToken = await prisma.passwordResetToken.findUnique({ where: { token } });
+    if (!resetToken || resetToken.used || resetToken.expiresAt < new Date()) {
+      return res.status(400).json({ message: "Invalid or expired reset token" });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+    await prisma.user.update({ where: { id: resetToken.userId }, data: { password: hashedPassword } });
+    await prisma.passwordResetToken.update({ where: { id: resetToken.id }, data: { used: true } });
+
+    res.json({ message: "Password reset successful" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount, forgotPassword, resetPassword };
