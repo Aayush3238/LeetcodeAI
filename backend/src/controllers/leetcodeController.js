@@ -1,5 +1,6 @@
 const realLeetcode = require("../services/leetcode/realLeetcode");
 const prisma = require("../config/db");
+const { createNotification } = require("./notificationController");
 
 const getProfile = async (req, res, next) => {
   try {
@@ -92,6 +93,13 @@ const sync = async (req, res, next) => {
       where: { id: req.user.id },
       data: { lastSyncedAt: new Date() },
     });
+
+    await createNotification(
+      req.user.id,
+      "sync",
+      "LeetCode Sync Complete",
+      `Synced ${result.syncedCount} problems from LeetCode.`
+    );
 
     res.json({
       message: "LeetCode data synced",

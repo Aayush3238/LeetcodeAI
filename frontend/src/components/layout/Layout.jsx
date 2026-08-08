@@ -1,11 +1,12 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Outlet, NavLink, useNavigate, useSearchParams } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../stores/authStore'
+import { notificationsAPI } from '../../services/api'
 import { SIDEBAR_LINKS } from '../../constants'
 import {
   LayoutDashboard, User, Code2, FileCode, Bot, Target,
-  Calendar, Settings, LogOut, Menu, X, ChevronLeft, Search,
+  Calendar, Settings, LogOut, Menu, X, ChevronLeft, Search, Bell,
 } from 'lucide-react'
 
 const iconMap = {
@@ -16,6 +17,10 @@ export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
   const [mobileOpen, setMobileOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
+  const [notifOpen, setNotifOpen] = useState(false)
+  const [notifications, setNotifications] = useState([])
+  const [unreadCount, setUnreadCount] = useState(0)
+  const notifRef = useRef(null)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -26,6 +31,37 @@ export default function Layout() {
       navigate(`/problems?search=${encodeURIComponent(searchQuery.trim())}`)
       setSearchQuery('')
     }
+  }
+
+  const fetchNotifications = async () => {
+    try {
+      const [notifs, count] = await Promise.all([
+        notificationsAPI.getNotifications(),
+        notificationsAPI.getUnreadCount(),
+      ])
+      setNotifications(notifs.data.notifications)
+      setUnreadCount(count.data.count)
+    } catch {}
+  }
+
+  useEffect(() => {
+    fetchNotifications()
+    const interval = setInterval(fetchNotifications, 30000)
+    return () => clearInterval(interval)
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (notifRef.current && !notifRef.current.contains(e.target)) setNotifOpen(false)
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  const handleMarkAllRead = async () => {
+    await notificationsAPI.markAllAsRead()
+    setUnreadCount(0)
+    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
   }
 
   const handleLogout = () => {
@@ -126,6 +162,41 @@ export default function Layout() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                 />
               </form>
+            </div>
+            <div className="relative" ref={notifRef}>
+              <button onClick={() => setNotifOpen(!notifOpen)} className="relative p-2 hover:bg-dark-800 hover:bg-gray-100 rounded-xl">
+                <Bell size={20} />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-red-500 rounded-full text-[10px] font-bold flex items-center justify-center text-white">
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </span>
+                )}
+              </button>
+              <AnimatePresence>
+                {notifOpen && (
+                  <motion.div initial={{ opacity: 0, y: 10, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 10, scale: 0.95 }} className="absolute right-0 top-12 w-80 card p-0 z-50 shadow-xl max-h-96 overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-dark-800 border-gray-200">
+                      <h3 className="font-semibold text-sm">Notifications</h3>
+                      {unreadCount > 0 && (
+                        <button onClick={handleMarkAllRead} className="text-xs text-primary-400 hover:text-primary-300">Mark all read</button>
+                      )}
+                    </div>
+                    <div className="overflow-y-auto max-h-80 scrollbar-thin">
+                      {notifications.length === 0 ? (
+                        <p className="text-dark-500 text-gray-400 text-sm text-center py-8">No notifications yet</p>
+                      ) : (
+                        notifications.map((n) => (
+                          <div key={n.id} className={`px-4 py-3 border-b border-dark-800/50 border-gray-200/50 ${!n.read ? 'bg-primary-600/5' : ''}`}>
+                            <p className="text-sm font-medium">{n.title}</p>
+                            <p className="text-dark-400 text-gray-500 text-xs mt-0.5">{n.message}</p>
+                            <p className="text-dark-500 text-gray-400 text-[10px] mt-1">{new Date(n.createdAt).toLocaleString()}</p>
+                          </div>
+                        ))
+                      )}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-medium overflow-hidden">
