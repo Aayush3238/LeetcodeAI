@@ -28,6 +28,9 @@ model User {
   weakTopics     WeakTopic[]
   analytics      Analytics[]
   problemsSolved UserProblem[]
+  refreshTokens  RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  notifications  Notification[]
 }
 
 model Problem {
