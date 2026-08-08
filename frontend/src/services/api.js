@@ -53,6 +53,11 @@ export const authAPI = {
   resetPassword: (token, password) => api.post('/auth/reset-password', { token, password }),
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
+  uploadAvatar: (file) => {
+    const formData = new FormData()
+    formData.append('avatar', file)
+    return api.post('/auth/avatar', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+  },
   deleteAccount: () => api.delete('/auth/account'),
 }
 

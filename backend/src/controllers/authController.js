@@ -1,5 +1,6 @@
 const bcrypt = require("bcryptjs");
 const crypto = require("crypto");
+const path = require("path");
 const prisma = require("../config/db");
 const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
@@ -144,6 +145,25 @@ const updateProfile = async (req, res, next) => {
   }
 };
 
+const uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: "No file uploaded" });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+    const user = await prisma.user.update({
+      where: { id: req.user.id },
+      data: { avatar: avatarUrl },
+      select: userSelect,
+    });
+
+    res.json({ user, avatar: avatarUrl });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const deleteAccount = async (req, res, next) => {
   try {
     await prisma.user.delete({ where: { id: req.user.id } });
@@ -214,4 +234,4 @@ const resetPassword = async (req, res, next) => {
   }
 };
 
-module.exports = { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount, forgotPassword, resetPassword };
+module.exports = { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, uploadAvatar, deleteAccount, forgotPassword, resetPassword };

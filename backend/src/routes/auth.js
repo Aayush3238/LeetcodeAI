@@ -1,10 +1,32 @@
 const express = require("express");
 const passport = require("passport");
-const { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, deleteAccount, forgotPassword, resetPassword } = require("../controllers/authController");
+const multer = require("multer");
+const path = require("path");
+const { signup, login, setPassword, googleCallback, githubCallback, getProfile, updateProfile, uploadAvatar, deleteAccount, forgotPassword, resetPassword } = require("../controllers/authController");
 const { authenticate, generateAccessToken, generateRefreshToken, refreshAccessToken, revokeRefreshToken } = require("../middleware/auth");
 const { authLimiter } = require("../middleware/rateLimiter");
 
 const router = express.Router();
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => cb(null, path.join(__dirname, "../../uploads/avatars")),
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${req.user.id}-${Date.now()}${ext}`);
+  },
+});
+
+const upload = multer({
+  storage,
+  limits: { fileSize: 2 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const allowed = /jpeg|jpg|png|gif|webp/;
+    const ext = allowed.test(path.extname(file.originalname).toLowerCase());
+    const mime = allowed.test(file.mimetype);
+    if (ext && mime) return cb(null, true);
+    cb(new Error("Only image files (jpg, png, gif, webp) are allowed"));
+  },
+});
 
 router.post("/signup", authLimiter, signup);
 router.post("/login", authLimiter, login);
@@ -56,6 +78,7 @@ router.get(
 
 router.get("/profile", authenticate, getProfile);
 router.put("/profile", authenticate, updateProfile);
+router.post("/avatar", authenticate, upload.single("avatar"), uploadAvatar);
 router.delete("/account", authenticate, deleteAccount);
 
 module.exports = router;

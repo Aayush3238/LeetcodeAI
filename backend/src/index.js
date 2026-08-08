@@ -34,6 +34,8 @@ app.use(require("express-session")({
 app.use(passport.initialize());
 app.use("/api", apiLimiter);
 
+app.use("/uploads", express.static("uploads"));
+
 app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
 app.use("/api/submissions", submissionRoutes);

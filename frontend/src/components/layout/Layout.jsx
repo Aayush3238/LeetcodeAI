@@ -128,8 +128,12 @@ export default function Layout() {
               </form>
             </div>
             <div className="flex items-center gap-3">
-              <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-medium">
-                {user?.name?.charAt(0) || 'U'}
+              <div className="w-8 h-8 rounded-full bg-primary-600 flex items-center justify-center text-sm font-medium overflow-hidden">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-8 h-8 rounded-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || 'U'
+                )}
               </div>
               <span className="hidden sm:block text-sm font-medium">{user?.name}</span>
             </div>

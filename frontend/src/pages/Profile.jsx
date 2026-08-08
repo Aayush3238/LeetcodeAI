@@ -5,12 +5,13 @@ import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
 import { dashboardAPI, authAPI, leetcodeAPI } from '../services/api'
 import { PageHeader, StatCard, Skeleton, Button } from '../components/ui'
-import { User, Code2, Award, TrendingUp, Link2, Calendar, CheckCircle } from 'lucide-react'
+import { User, Code2, Award, TrendingUp, Link2, Calendar, CheckCircle, Camera } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Profile() {
   const { user, updateUser } = useAuthStore()
   const [editing, setEditing] = useState(false)
+  const [uploading, setUploading] = useState(false)
   const { register, handleSubmit, formState: { errors } } = useForm({
     defaultValues: { name: user?.name || '', leetcodeUsername: user?.leetcodeUsername || '' },
   })
@@ -43,6 +44,25 @@ export default function Profile() {
 
   const stats = dashboard?.stats || {}
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be under 2MB')
+      return
+    }
+    setUploading(true)
+    try {
+      const res = await authAPI.uploadAvatar(file)
+      updateUser(res.data.user)
+      toast.success('Avatar updated!')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload avatar')
+    } finally {
+      setUploading(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <PageHeader title="Profile" description="Your LeetCoach profile" />
@@ -50,11 +70,22 @@ export default function Profile() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="lg:col-span-1">
           <div className="card p-6 text-center">
-            <div className="w-24 h-24 rounded-full bg-primary-600 flex items-center justify-center mx-auto mb-4 text-3xl font-bold">
-              {user?.avatar ? (
-                <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover" />
-              ) : (
-                user?.name?.charAt(0) || 'U'
+            <div className="relative w-24 h-24 mx-auto mb-4">
+              <div className="w-24 h-24 rounded-full bg-primary-600 flex items-center justify-center text-3xl font-bold overflow-hidden">
+                {user?.avatar ? (
+                  <img src={user.avatar} alt={user.name} className="w-24 h-24 rounded-full object-cover" />
+                ) : (
+                  user?.name?.charAt(0) || 'U'
+                )}
+              </div>
+              <label className="absolute bottom-0 right-0 w-8 h-8 bg-dark-700 bg-gray-200 rounded-full flex items-center justify-center cursor-pointer hover:bg-dark-600 hover:bg-gray-300 transition-colors">
+                <Camera size={14} />
+                <input type="file" accept="image/*" onChange={handleAvatarUpload} className="hidden" disabled={uploading} />
+              </label>
+              {uploading && (
+                <div className="absolute inset-0 rounded-full bg-black/50 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                </div>
               )}
             </div>
             <h2 className="text-xl font-bold">{user?.name}</h2>
