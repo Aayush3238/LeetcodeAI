@@ -3,42 +3,60 @@ const prisma = require("../config/db");
 
 const getProblems = async (req, res, next) => {
   try {
-    const { search, difficulty, topic, page = 1, limit = 20, sort = "title" } = req.query;
+    const { search, difficulty, topic, page = 1, limit = 20, sort = "leetcodeId" } = req.query;
+    const pageNum = Math.max(1, Number(page));
+    const limitNum = Math.min(100, Math.max(1, Number(limit)));
+    const skip = (pageNum - 1) * limitNum;
 
-    let problems;
-    try {
-      const dbProblems = await prisma.problem.findMany({
-        where: {},
-        orderBy: { title: "asc" },
-      });
-      problems = dbProblems.map((p) => ({
-        leetcodeId: p.leetcodeId,
-        title: p.title,
-        titleSlug: p.titleSlug,
-        difficulty: p.difficulty,
-        topic: p.topic,
-        tags: p.tags,
-        acceptance: p.acceptance,
-      }));
-    } catch {
-      problems = await leetcodeService.getProblems();
-    }
-
+    const where = {};
     if (search) {
-      problems = problems.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()));
+      where.title = { contains: search, mode: "insensitive" };
     }
     if (difficulty) {
-      problems = problems.filter((p) => p.difficulty === difficulty);
+      where.difficulty = difficulty;
     }
     if (topic) {
-      problems = problems.filter((p) => p.topic === topic);
+      where.topic = topic;
     }
 
-    const total = problems.length;
-    const offset = (page - 1) * limit;
-    problems = problems.slice(offset, offset + Number(limit));
+    const orderBy = sort === "title" ? { title: "asc" } : { leetcodeId: "asc" };
 
-    res.json({ problems, total, page: Number(page), totalPages: Math.ceil(total / limit) });
+    try {
+      const [problems, total] = await Promise.all([
+        prisma.problem.findMany({
+          where,
+          orderBy,
+          skip,
+          take: limitNum,
+          select: {
+            leetcodeId: true,
+            title: true,
+            titleSlug: true,
+            difficulty: true,
+            topic: true,
+            tags: true,
+            acceptance: true,
+          },
+        }),
+        prisma.problem.count({ where }),
+      ]);
+
+      res.json({
+        problems,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum),
+      });
+    } catch {
+      const allProblems = await leetcodeService.getProblems();
+      let filtered = allProblems;
+      if (search) filtered = filtered.filter((p) => p.title.toLowerCase().includes(search.toLowerCase()));
+      if (difficulty) filtered = filtered.filter((p) => p.difficulty === difficulty);
+      if (topic) filtered = filtered.filter((p) => p.topic === topic);
+      const total = filtered.length;
+      const paginated = filtered.slice(skip, skip + limitNum);
+      res.json({ problems: paginated, total, page: pageNum, totalPages: Math.ceil(total / limitNum) });
+    }
   } catch (error) {
     next(error);
   }
