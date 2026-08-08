@@ -3,7 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { submissionsAPI } from '../services/api'
 import { PageHeader, Badge, Button, Skeleton, EmptyState } from '../components/ui'
-import { FileCode, Clock, Cpu, CheckCircle, XCircle, Bot, X, ChevronDown, ChevronUp } from 'lucide-react'
+import { FileCode, Clock, Cpu, CheckCircle, XCircle, Bot, X, ChevronDown, ChevronUp, ExternalLink, BarChart3 } from 'lucide-react'
 import { formatDate } from '../utils'
 
 function AnalysisModal({ submission, onClose }) {
@@ -127,10 +127,39 @@ function SubmissionRow({ submission, onAnalyze }) {
         {expanded && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }} className="overflow-hidden">
             <div className="px-6 pb-4 space-y-4">
-              <pre className="bg-dark-800 bg-gray-100 rounded-xl p-4 text-sm font-mono text-dark-200 text-gray-800 overflow-x-auto scrollbar-thin">{submission.code}</pre>
-              <Button onClick={(e) => { e.stopPropagation(); onAnalyze(submission) }} variant="secondary">
-                <Bot size={16} className="mr-2" /> Analyze with AI
-              </Button>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 bg-dark-800 bg-gray-100 rounded-xl">
+                  <p className="text-dark-400 text-gray-500 text-xs mb-1">Language</p>
+                  <p className="font-medium text-sm">{submission.language}</p>
+                </div>
+                <div className="p-3 bg-dark-800 bg-gray-100 rounded-xl">
+                  <p className="text-dark-400 text-gray-500 text-xs mb-1">Runtime</p>
+                  <p className="font-medium text-sm flex items-center gap-1"><Clock size={12} /> {submission.runtime}ms</p>
+                </div>
+                <div className="p-3 bg-dark-800 bg-gray-100 rounded-xl">
+                  <p className="text-dark-400 text-gray-500 text-xs mb-1">Memory</p>
+                  <p className="font-medium text-sm flex items-center gap-1"><Cpu size={12} /> {submission.memory}MB</p>
+                </div>
+              </div>
+
+              <pre className="bg-dark-800 bg-gray-100 rounded-xl p-4 text-sm font-mono text-dark-200 text-gray-800 overflow-x-auto scrollbar-thin max-h-96">{submission.code}</pre>
+
+              <div className="flex items-center gap-3">
+                <Button onClick={(e) => { e.stopPropagation(); onAnalyze(submission) }} variant="secondary">
+                  <Bot size={16} className="mr-2" /> Analyze with AI
+                </Button>
+                {p?.titleSlug && (
+                  <a
+                    href={`https://leetcode.com/problems/${p.titleSlug}/`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="btn-ghost inline-flex items-center gap-2 text-sm"
+                  >
+                    <ExternalLink size={14} /> View on LeetCode
+                  </a>
+                )}
+              </div>
             </div>
           </motion.div>
         )}
