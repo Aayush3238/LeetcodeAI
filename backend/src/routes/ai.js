@@ -5,6 +5,7 @@ const {
   sendMessage,
   chatStream,
   generateRevisionPlan,
+  getRevisionPlans,
   explainCode,
 } = require("../controllers/aiController");
 const { authenticate } = require("../middleware/auth");
@@ -23,6 +24,7 @@ router.post("/conversations", authenticate, validate(createConversationSchema), 
 router.post("/chat", authenticate, validate(sendMessageSchema), sendMessage);
 router.post("/chat/stream", authenticate, validate(sendMessageSchema), chatStream);
 router.post("/revision-plan", authenticate, validate(generateRevisionPlanSchema), generateRevisionPlan);
+router.get("/revision-plans", authenticate, getRevisionPlans);
 router.post("/explain", authenticate, validate(explainCodeSchema), explainCode);
 
 module.exports = router;

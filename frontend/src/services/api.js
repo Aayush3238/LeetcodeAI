@@ -104,6 +104,7 @@ export const aiAPI = {
     }
   },
   generateRevisionPlan: (data) => api.post('/ai/revision-plan', data),
+  getRevisionPlans: () => api.get('/ai/revision-plans'),
   explainCode: (data) => api.post('/ai/explain', data),
 }
 

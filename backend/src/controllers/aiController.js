@@ -129,6 +129,20 @@ const generateRevisionPlan = async (req, res, next) => {
   }
 };
 
+const getRevisionPlans = async (req, res, next) => {
+  try {
+    const plans = await prisma.revisionPlan.findMany({
+      where: { userId: req.user.id },
+      include: { items: { orderBy: { day: "asc" } } },
+      orderBy: { createdAt: "desc" },
+      take: 10,
+    });
+    res.json({ plans });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const explainCode = async (req, res, next) => {
   try {
     const { code, language, question } = req.body;
@@ -145,5 +159,6 @@ module.exports = {
   sendMessage,
   chatStream,
   generateRevisionPlan,
+  getRevisionPlans,
   explainCode,
 };
