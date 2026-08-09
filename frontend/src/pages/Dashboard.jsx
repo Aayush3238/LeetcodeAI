@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { dashboardAPI } from '../services/api'
 import { StatCard, Skeleton, PageHeader } from '../components/ui'
 import { Code2, CheckCircle, Clock, Flame, TrendingUp, Target } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts'
 
 const COLORS = ['#22c55e', '#eab308', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16']
 
@@ -30,7 +30,7 @@ export default function Dashboard() {
 
   if (isLoading) return <DashboardSkeleton />
 
-  const { stats, topicDistribution, recentProblems } = data || {}
+  const { stats, topicDistribution, dailyActivity, recentProblems } = data || {}
   const difficultyData = [
     { name: 'Easy', value: stats?.easy || 0, color: '#22c55e' },
     { name: 'Medium', value: stats?.medium || 0, color: '#eab308' },
@@ -87,6 +87,26 @@ export default function Dashboard() {
           </div>
         </motion.div>
       </div>
+
+      {dailyActivity && dailyActivity.length > 0 && (() => {
+        const last30 = dailyActivity.slice(-30)
+        const hasData = last30.some((d) => d.count > 0)
+        if (!hasData) return null
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card p-6">
+            <h3 className="text-lg font-semibold mb-4">Submissions (Last 30 Days)</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <LineChart data={last30}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+                <XAxis dataKey="date" tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(v) => v.slice(5)} interval="preserveStartEnd" />
+                <YAxis tick={{ fill: '#94a3b8' }} allowDecimals={false} />
+                <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} labelFormatter={(v) => `Date: ${v}`} />
+                <Line type="monotone" dataKey="count" stroke="#6366f1" strokeWidth={2} dot={{ fill: '#6366f1', r: 3 }} activeDot={{ r: 5 }} />
+              </LineChart>
+            </ResponsiveContainer>
+          </motion.div>
+        )
+      })()}
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
         <h3 className="text-lg font-semibold mb-4">Recently Solved</h3>
