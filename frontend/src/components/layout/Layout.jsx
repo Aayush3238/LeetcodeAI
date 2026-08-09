@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Outlet, NavLink, useNavigate, useSearchParams } from 'react-router-dom'
+import { Outlet, NavLink, useNavigate, useSearchParams, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useAuthStore } from '../../stores/authStore'
 import { notificationsAPI } from '../../services/api'
@@ -12,6 +12,14 @@ import {
 const iconMap = {
   LayoutDashboard, User, Code2, FileCode, Bot, Target, Calendar, Settings,
 }
+
+const BOTTOM_NAV = [
+  { path: '/dashboard', label: 'Home', icon: LayoutDashboard },
+  { path: '/problems', label: 'Problems', icon: Code2 },
+  { path: '/submissions', label: 'Submissions', icon: FileCode },
+  { path: '/ai-coach', label: 'AI Coach', icon: Bot },
+  { path: '/settings', label: 'More', icon: Settings },
+]
 
 export default function Layout() {
   const [collapsed, setCollapsed] = useState(false)
@@ -130,6 +138,7 @@ export default function Layout() {
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
               className="fixed left-0 top-0 bottom-0 w-64 bg-dark-900 dark:bg-dark-900 bg-white border-r border-dark-800 dark:border-dark-800 border-gray-200 z-50 lg:hidden"
             >
               <SidebarContent />
@@ -140,8 +149,8 @@ export default function Layout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="flex items-center justify-between px-6 py-4 border-b border-dark-800 dark:border-dark-800 border-gray-200 bg-dark-900/30 dark:bg-dark-900/30 bg-white/30 backdrop-blur-xl">
-          <div className="flex items-center gap-4">
+        <header className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-dark-800 dark:border-dark-800 border-gray-200 bg-dark-900/30 dark:bg-dark-900/30 bg-white/30 backdrop-blur-xl">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button onClick={() => setMobileOpen(true)} className="lg:hidden p-2 hover:bg-dark-800 dark:hover:bg-dark-800 hover:bg-gray-100 rounded-xl">
               <Menu size={20} />
             </button>
@@ -150,7 +159,7 @@ export default function Layout() {
             </button>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <div className="relative hidden sm:block">
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500 dark:text-dark-500 text-gray-400" />
               <form onSubmit={handleSearch}>
@@ -206,12 +215,12 @@ export default function Layout() {
                   user?.name?.charAt(0) || 'U'
                 )}
               </div>
-              <span className="hidden sm:block text-sm font-medium">{user?.name}</span>
+              <span className="hidden md:block text-sm font-medium">{user?.name}</span>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto scrollbar-thin p-6">
+        <main className="flex-1 overflow-y-auto scrollbar-thin p-4 sm:p-6 pb-20 lg:pb-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
@@ -220,6 +229,28 @@ export default function Layout() {
             <Outlet />
           </motion.div>
         </main>
+
+        {/* Bottom Navigation - Mobile Only */}
+        <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-dark-900/95 dark:bg-dark-900/95 bg-white/95 backdrop-blur-xl border-t border-dark-800 dark:border-dark-800 border-gray-200 z-30 safe-area-bottom">
+          <div className="flex items-center justify-around px-2 py-1">
+            {BOTTOM_NAV.map(({ path, label, icon: Icon }) => (
+              <NavLink
+                key={path}
+                to={path}
+                className={({ isActive }) =>
+                  `flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-lg transition-colors min-w-[56px] ${
+                    isActive
+                      ? 'text-primary-400 dark:text-primary-400 text-primary-600'
+                      : 'text-dark-400 dark:text-dark-400 text-gray-400 hover:text-dark-200'
+                  }`
+                }
+              >
+                <Icon size={20} />
+                <span className="text-[10px] font-medium">{label}</span>
+              </NavLink>
+            ))}
+          </div>
+        </nav>
       </div>
     </div>
   )

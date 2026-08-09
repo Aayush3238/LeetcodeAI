@@ -157,4 +157,8 @@
   .light .scrollbar-thin::-webkit-scrollbar-thumb {
     background-color: theme('colors.gray.300');
   }
+
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
