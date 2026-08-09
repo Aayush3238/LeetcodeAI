@@ -35,13 +35,18 @@ async function setCache(key, data, ttl = CACHE_TTL) {
   } catch {}
 }
 
-async function graphqlQuery(query, variables = {}) {
+async function graphqlQuery(query, variables = {}, sessionCookie = null) {
   let lastError;
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      const headers = { ...HEADERS };
+      if (sessionCookie) {
+        headers["Cookie"] = `LEETCODE_SESSION=${sessionCookie}`;
+      }
+
       const res = await fetch(LEETCODE_GRAPHQL_URL, {
         method: "POST",
-        headers: HEADERS,
+        headers,
         body: JSON.stringify({ query, variables }),
       });
 
@@ -226,6 +231,9 @@ class LeetCodeService {
   }
 
   async syncToDatabase(userId, username) {
+    const user = await prisma.user.findUnique({ where: { id: userId }, select: { leetcodeSession: true } });
+    const sessionCookie = user?.leetcodeSession || null;
+
     const profile = await this.getProfile(username);
     if (!profile) throw new Error("LeetCode user not found");
 

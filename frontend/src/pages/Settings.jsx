@@ -120,6 +120,9 @@ function ConnectionsTab() {
   const [lcSyncing, setLcSyncing] = useState(false)
   const [lcConnecting, setLcConnecting] = useState(false)
   const [lcLastSynced, setLcLastSynced] = useState(null)
+  const [lcHasSession, setLcHasSession] = useState(false)
+  const [lcSession, setLcSession] = useState('')
+  const [savingSession, setSavingSession] = useState(false)
   const [ghConnected, setGhConnected] = useState(false)
 
   useEffect(() => {
@@ -129,6 +132,10 @@ function ConnectionsTab() {
         setLcUsername(res.data.username || '')
         setLcLastSynced(res.data.lastSyncedAt)
       })
+      .catch(() => {})
+
+    leetcodeAPI.getSessionStatus()
+      .then((res) => setLcHasSession(res.data.hasSession))
       .catch(() => {})
 
     githubAPI.getStatus()
@@ -194,6 +201,24 @@ function ConnectionsTab() {
     }
   }
 
+  const handleSaveSession = async () => {
+    if (!lcSession.trim()) {
+      toast.error('Paste your LEETCODE_SESSION cookie value')
+      return
+    }
+    setSavingSession(true)
+    try {
+      await leetcodeAPI.saveSession(lcSession.trim())
+      setLcHasSession(true)
+      setLcSession('')
+      toast.success('Session saved! Deep sync enabled.')
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to save session')
+    } finally {
+      setSavingSession(false)
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -220,6 +245,29 @@ function ConnectionsTab() {
                 <Unlink size={16} />
                 Disconnect
               </Button>
+            </div>
+
+            <div className="mt-4 p-4 rounded-xl border border-dark-700 border-gray-200 bg-dark-800/30 bg-gray-50/50">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield size={14} className="text-primary-400" />
+                <span className="text-sm font-medium">Deep Sync (Optional)</span>
+                {lcHasSession && <span className="text-xs text-green-400 bg-green-400/10 px-2 py-0.5 rounded-lg">Active</span>}
+              </div>
+              <p className="text-dark-400 text-gray-500 text-xs mb-3">
+                Paste your LEETCODE_SESSION cookie to enable deep sync with private submission data.
+              </p>
+              <div className="flex gap-2">
+                <input
+                  type="password"
+                  value={lcSession}
+                  onChange={(e) => setLcSession(e.target.value)}
+                  className="input flex-1 text-xs"
+                  placeholder="LEETCODE_SESSION cookie value"
+                />
+                <Button onClick={handleSaveSession} disabled={savingSession} variant="secondary" className="text-xs">
+                  {savingSession ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
             </div>
           </div>
         ) : (

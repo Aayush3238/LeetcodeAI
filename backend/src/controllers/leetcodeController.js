@@ -115,7 +115,7 @@ const disconnect = async (req, res, next) => {
   try {
     await prisma.user.update({
       where: { id: req.user.id },
-      data: { leetcodeUsername: null },
+      data: { leetcodeUsername: null, leetcodeSession: null },
     });
 
     res.json({ message: "LeetCode account disconnected" });
@@ -124,4 +124,35 @@ const disconnect = async (req, res, next) => {
   }
 };
 
-module.exports = { getProfile, getStatus, connect, sync, disconnect };
+const saveSession = async (req, res, next) => {
+  try {
+    const { session } = req.body;
+    if (!session || typeof session !== "string") {
+      return res.status(400).json({ message: "Session cookie is required" });
+    }
+
+    await prisma.user.update({
+      where: { id: req.user.id },
+      data: { leetcodeSession: session.trim() },
+    });
+
+    res.json({ message: "LeetCode session saved. Deep sync enabled." });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getSessionStatus = async (req, res, next) => {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.id },
+      select: { leetcodeSession: true },
+    });
+
+    res.json({ hasSession: !!user.leetcodeSession });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { getProfile, getStatus, connect, sync, disconnect, saveSession, getSessionStatus };

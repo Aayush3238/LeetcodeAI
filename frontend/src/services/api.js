@@ -109,9 +109,11 @@ export const aiAPI = {
 
 export const leetcodeAPI = {
   getStatus: () => api.get('/leetcode/status'),
+  getSessionStatus: () => api.get('/leetcode/session-status'),
   getProfile: (username) => api.get(`/leetcode/profile/${username}`),
   connect: (username) => api.post('/leetcode/connect', { username }),
   sync: () => api.post('/leetcode/sync'),
+  saveSession: (session) => api.post('/leetcode/session', { session }),
   disconnect: () => api.post('/leetcode/disconnect'),
 }
 
