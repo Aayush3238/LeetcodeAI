@@ -17,6 +17,7 @@ import Submissions from './pages/Submissions'
 import AICoach from './pages/AICoach'
 import WeakTopics from './pages/WeakTopics'
 import RevisionPlan from './pages/RevisionPlan'
+import GitHubRepos from './pages/GitHubRepos'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
 
@@ -71,6 +72,7 @@ export default function App() {
               <Route path="ai-coach" element={<AICoach />} />
               <Route path="weak-topics" element={<WeakTopics />} />
               <Route path="revision-plan" element={<RevisionPlan />} />
+              <Route path="github" element={<GitHubRepos />} />
               <Route path="settings" element={<Settings />} />
               <Route path="*" element={<NotFound />} />
             </Route>
