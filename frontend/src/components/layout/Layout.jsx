@@ -29,6 +29,7 @@ export default function Layout() {
   const [notifications, setNotifications] = useState([])
   const [unreadCount, setUnreadCount] = useState(0)
   const notifRef = useRef(null)
+  const searchRef = useRef(null)
   const { user, logout } = useAuthStore()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
@@ -64,6 +65,17 @@ export default function Layout() {
     }
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
+  useEffect(() => {
+    const handleFocusSearch = () => searchRef.current?.focus()
+    const handleClose = () => { setNotifOpen(false); setMobileOpen(false) }
+    document.addEventListener('shortcut:focusSearch', handleFocusSearch)
+    document.addEventListener('shortcut:close', handleClose)
+    return () => {
+      document.removeEventListener('shortcut:focusSearch', handleFocusSearch)
+      document.removeEventListener('shortcut:close', handleClose)
+    }
   }, [])
 
   const handleMarkAllRead = async () => {
@@ -164,8 +176,9 @@ export default function Layout() {
               <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-dark-500 dark:text-dark-500 text-gray-400" />
               <form onSubmit={handleSearch}>
                 <input
+                  ref={searchRef}
                   type="text"
-                  placeholder="Search problems..."
+                  placeholder="Search problems... ( / )"
                   className="input pl-10 w-64"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
