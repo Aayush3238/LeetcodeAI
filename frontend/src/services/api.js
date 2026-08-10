@@ -6,9 +6,24 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
+let csrfToken = null
+
+export const fetchCsrfToken = async () => {
+  try {
+    const res = await axios.get('/api/csrf-token', { withCredentials: true })
+    csrfToken = res.data.csrfToken
+    return csrfToken
+  } catch {
+    return null
+  }
+}
+
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token
   if (token) config.headers.Authorization = `Bearer ${token}`
+  if (csrfToken && ['post', 'put', 'patch', 'delete'].includes(config.method)) {
+    config.headers['X-CSRF-Token'] = csrfToken
+  }
   return config
 })
 

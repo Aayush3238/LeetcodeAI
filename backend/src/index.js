@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser");
 const passport = require("./config/passport");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
+const { csrfProtection, setCsrfCookie } = require("./middleware/csrf");
 const logger = require("./utils/logger");
 
 const authRoutes = require("./routes/auth");
@@ -35,6 +36,12 @@ app.use(require("express-session")({
 }));
 app.use(passport.initialize());
 app.use("/api", apiLimiter);
+
+app.get("/api/csrf-token", setCsrfCookie, (req, res) => {
+  res.json({ csrfToken: res.getHeader("X-CSRF-Token") });
+});
+
+app.use("/api", csrfProtection);
 
 app.use("/uploads", express.static("uploads"));
 
