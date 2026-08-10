@@ -3,9 +3,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useForm } from 'react-hook-form'
 import { motion } from 'framer-motion'
 import { useAuthStore } from '../stores/authStore'
-import { dashboardAPI, authAPI, leetcodeAPI } from '../services/api'
+import { dashboardAPI, authAPI, leetcodeAPI, submissionsAPI, bookmarksAPI } from '../services/api'
 import { PageHeader, StatCard, Skeleton, Button } from '../components/ui'
-import { User, Code2, Award, TrendingUp, Link2, Calendar, CheckCircle, Camera } from 'lucide-react'
+import { User, Code2, Award, TrendingUp, Link2, Calendar, CheckCircle, Camera, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function Profile() {
@@ -39,6 +39,48 @@ export default function Profile() {
       toast.success('Profile updated!')
     } catch {
       toast.error('Failed to update profile')
+    }
+  }
+
+  const handleExportData = async () => {
+    try {
+      const [dashRes, subsRes, bookmarksRes] = await Promise.all([
+        dashboardAPI.getDashboard(),
+        submissionsAPI.getSubmissions(),
+        bookmarksAPI.getBookmarks(),
+      ])
+
+      const exportData = {
+        profile: { name: user?.name, email: user?.email, createdAt: user?.createdAt },
+        stats: dashRes.data.stats,
+        topicDistribution: dashRes.data.topicDistribution,
+        recentProblems: dashRes.data.recentProblems,
+        submissions: subsRes.data.submissions?.map((s) => ({
+          problem: s.problem?.title,
+          language: s.language,
+          runtime: s.runtime,
+          memory: s.memory,
+          status: s.status,
+          submissionTime: s.submissionTime,
+        })),
+        bookmarks: bookmarksRes.data.bookmarks?.map((b) => ({
+          title: b.problem?.title,
+          leetcodeId: b.problem?.leetcodeId,
+          addedAt: b.createdAt,
+        })),
+        exportedAt: new Date().toISOString(),
+      }
+
+      const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `leetcoach-export-${new Date().toISOString().split('T')[0]}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+      toast.success('Data exported!')
+    } catch {
+      toast.error('Failed to export data')
     }
   }
 
@@ -118,6 +160,9 @@ export default function Profile() {
 
             <button onClick={() => setEditing(!editing)} className="btn-secondary mt-6 w-full">
               {editing ? 'Cancel' : 'Edit Profile'}
+            </button>
+            <button onClick={handleExportData} className="btn-ghost mt-2 w-full inline-flex items-center justify-center gap-2 text-sm">
+              <Download size={16} /> Export My Data
             </button>
           </div>
         </motion.div>
