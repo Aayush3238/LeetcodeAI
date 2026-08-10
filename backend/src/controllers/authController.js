@@ -4,6 +4,7 @@ const path = require("path");
 const prisma = require("../config/db");
 const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
+const { logAudit } = require("../utils/audit");
 
 const userSelect = {
   id: true,
@@ -39,6 +40,9 @@ const signup = async (req, res, next) => {
 
     const token = generateToken(user.id);
     const refreshToken = await generateRefreshToken(user.id);
+
+    await logAudit(user.id, "ACCOUNT_CREATED", "Email/password signup", req.ip);
+
     res.status(201).json({ user, token, refreshToken });
   } catch (error) {
     next(error);
@@ -71,6 +75,8 @@ const login = async (req, res, next) => {
     const refreshToken = await generateRefreshToken(user.id);
     const { password: _, ...userWithoutPassword } = user;
 
+    await logAudit(user.id, "LOGIN", "Email/password login", req.ip);
+
     res.json({ user: userWithoutPassword, token, refreshToken });
   } catch (error) {
     next(error);
@@ -94,6 +100,8 @@ const setPassword = async (req, res, next) => {
       where: { id: req.user.id },
       data: { password: hashedPassword },
     });
+
+    await logAudit(req.user.id, "PASSWORD_SET", "Password set for OAuth account", req.ip);
 
     res.json({ message: "Password set successfully" });
   } catch (error) {
@@ -139,6 +147,8 @@ const updateProfile = async (req, res, next) => {
       select: userSelect,
     });
 
+    await logAudit(req.user.id, "PROFILE_UPDATED", JSON.stringify(Object.keys(data)), req.ip);
+
     res.json({ user });
   } catch (error) {
     next(error);
@@ -166,6 +176,7 @@ const uploadAvatar = async (req, res, next) => {
 
 const deleteAccount = async (req, res, next) => {
   try {
+    await logAudit(req.user.id, "ACCOUNT_DELETED", "User initiated account deletion", req.ip);
     await prisma.user.delete({ where: { id: req.user.id } });
     res.json({ message: "Account deleted" });
   } catch (error) {
@@ -227,6 +238,8 @@ const resetPassword = async (req, res, next) => {
     const hashedPassword = await bcrypt.hash(password, 12);
     await prisma.user.update({ where: { id: resetToken.userId }, data: { password: hashedPassword } });
     await prisma.passwordResetToken.update({ where: { id: resetToken.id }, data: { used: true } });
+
+    await logAudit(resetToken.userId, "PASSWORD_RESET", "Password reset via email", req.ip);
 
     res.json({ message: "Password reset successful" });
   } catch (error) {

@@ -1,5 +1,6 @@
 const githubService = require("../services/github");
 const prisma = require("../config/db");
+const { logAudit } = require("../utils/audit");
 
 const getStatus = async (req, res, next) => {
   try {
@@ -77,6 +78,8 @@ const disconnect = async (req, res, next) => {
       where: { id: req.user.id },
       data: { githubId: null, githubToken: null },
     });
+
+    await logAudit(req.user.id, "GITHUB_DISCONNECTED", "GitHub account disconnected", req.ip);
 
     res.json({ message: "GitHub account disconnected" });
   } catch (error) {

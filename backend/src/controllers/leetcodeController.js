@@ -1,6 +1,7 @@
 const realLeetcode = require("../services/leetcode/realLeetcode");
 const prisma = require("../config/db");
 const { createNotification } = require("./notificationController");
+const { logAudit } = require("../utils/audit");
 
 const getProfile = async (req, res, next) => {
   try {
@@ -66,6 +67,8 @@ const connect = async (req, res, next) => {
       data: { lastSyncedAt: new Date() },
     });
 
+    await logAudit(req.user.id, "LEETCODE_CONNECTED", `Connected as ${trimmed}`, req.ip);
+
     res.json({
       message: "LeetCode account connected and synced",
       profile: result.profile,
@@ -118,6 +121,8 @@ const disconnect = async (req, res, next) => {
       data: { leetcodeUsername: null, leetcodeSession: null },
     });
 
+    await logAudit(req.user.id, "LEETCODE_DISCONNECTED", "LeetCode account disconnected", req.ip);
+
     res.json({ message: "LeetCode account disconnected" });
   } catch (error) {
     next(error);
@@ -135,6 +140,8 @@ const saveSession = async (req, res, next) => {
       where: { id: req.user.id },
       data: { leetcodeSession: session.trim() },
     });
+
+    await logAudit(req.user.id, "LEETCODE_SESSION_SAVED", "Deep sync session cookie updated", req.ip);
 
     res.json({ message: "LeetCode session saved. Deep sync enabled." });
   } catch (error) {
