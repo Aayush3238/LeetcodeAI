@@ -170,23 +170,58 @@ function SubmissionRow({ submission, onAnalyze }) {
 
 export default function Submissions() {
   const [analyzingSubmission, setAnalyzingSubmission] = useState(null)
+  const [filterLang, setFilterLang] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [searchProblem, setSearchProblem] = useState('')
 
   const { data, isLoading } = useQuery({
     queryKey: ['submissions'],
     queryFn: () => submissionsAPI.getSubmissions().then((r) => r.data),
   })
 
+  const allSubmissions = data?.submissions || []
+  const filteredSubmissions = allSubmissions.filter((s) => {
+    if (filterLang && s.language !== filterLang) return false
+    if (filterStatus && s.status !== filterStatus) return false
+    if (searchProblem && !s.problem?.title?.toLowerCase().includes(searchProblem.toLowerCase())) return false
+    return true
+  })
+
+  const languages = [...new Set(allSubmissions.map((s) => s.language))].filter(Boolean)
+  const statuses = [...new Set(allSubmissions.map((s) => s.status))].filter(Boolean)
+
   return (
     <div className="space-y-6">
       <PageHeader title="Submissions" description="Review your past submissions" />
 
+      {allSubmissions.length > 0 && (
+        <div className="card p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <input
+              value={searchProblem}
+              onChange={(e) => setSearchProblem(e.target.value)}
+              placeholder="Search by problem name..."
+              className="input flex-1"
+            />
+            <select value={filterLang} onChange={(e) => setFilterLang(e.target.value)} className="input">
+              <option value="">All Languages</option>
+              {languages.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+            <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="input">
+              <option value="">All Statuses</option>
+              {statuses.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+          </div>
+        </div>
+      )}
+
       <div className="card overflow-hidden">
         {isLoading ? (
           <div className="p-6 space-y-4">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-16" />)}</div>
-        ) : (data?.submissions || []).length === 0 ? (
-          <EmptyState icon={FileCode} title="No submissions yet" description="Start solving problems to see your submissions here" />
+        ) : filteredSubmissions.length === 0 ? (
+          <EmptyState icon={FileCode} title="No submissions found" description={allSubmissions.length > 0 ? "Try adjusting your filters" : "Start solving problems to see your submissions here"} />
         ) : (
-          (data?.submissions || []).map((s) => (
+          filteredSubmissions.map((s) => (
             <SubmissionRow key={s.id} submission={s} onAnalyze={setAnalyzingSubmission} />
           ))
         )}
