@@ -3,7 +3,7 @@ import { motion } from 'framer-motion'
 import { dashboardAPI } from '../services/api'
 import { StatCard, Skeleton, PageHeader } from '../components/ui'
 import { Code2, CheckCircle, Clock, Flame, TrendingUp, Target } from 'lucide-react'
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid } from 'recharts'
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line, CartesianGrid, AreaChart, Area } from 'recharts'
 
 const COLORS = ['#22c55e', '#eab308', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899', '#14b8a6', '#f97316', '#06b6d4', '#84cc16']
 
@@ -26,6 +26,11 @@ export default function Dashboard() {
   const { data, isLoading } = useQuery({
     queryKey: ['dashboard'],
     queryFn: () => dashboardAPI.getDashboard().then((r) => r.data),
+  })
+
+  const { data: diffProgress } = useQuery({
+    queryKey: ['difficulty-progress'],
+    queryFn: () => dashboardAPI.getDifficultyProgress(30).then((r) => r.data),
   })
 
   if (isLoading) return <DashboardSkeleton />
@@ -107,6 +112,28 @@ export default function Dashboard() {
           </motion.div>
         )
       })()}
+
+      {diffProgress?.progress && diffProgress.progress.length > 0 && diffProgress.progress[diffProgress.progress.length - 1].total > 0 && (
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
+          <h3 className="text-lg font-semibold mb-4">Difficulty Progress (Cumulative)</h3>
+          <ResponsiveContainer width="100%" height={280}>
+            <AreaChart data={diffProgress.progress}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
+              <XAxis dataKey="date" tick={{ fill: '#94a3b8', fontSize: 10 }} tickFormatter={(v) => v.slice(5)} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: '#94a3b8' }} allowDecimals={false} />
+              <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: '1px solid #334155', borderRadius: '12px', color: '#f1f5f9' }} labelFormatter={(v) => `Date: ${v}`} />
+              <Area type="monotone" dataKey="easy" stackId="1" stroke="#22c55e" fill="#22c55e" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="medium" stackId="1" stroke="#eab308" fill="#eab308" fillOpacity={0.3} />
+              <Area type="monotone" dataKey="hard" stackId="1" stroke="#ef4444" fill="#ef4444" fillOpacity={0.3} />
+            </AreaChart>
+          </ResponsiveContainer>
+          <div className="flex justify-center gap-6 mt-2">
+            <span className="flex items-center gap-2 text-sm"><span className="w-3 h-3 rounded-full bg-green-500" /> Easy</span>
+            <span className="flex items-center gap-2 text-sm"><span className="w-3 h-3 rounded-full bg-yellow-500" /> Medium</span>
+            <span className="flex items-center gap-2 text-sm"><span className="w-3 h-3 rounded-full bg-red-500" /> Hard</span>
+          </div>
+        </motion.div>
+      )}
 
       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
         <h3 className="text-lg font-semibold mb-4">Recently Solved</h3>

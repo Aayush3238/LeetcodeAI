@@ -65,6 +65,7 @@ export const dashboardAPI = {
   getDashboard: () => api.get('/dashboard'),
   getAnalytics: () => api.get('/dashboard/analytics'),
   getWeakTopics: () => api.get('/dashboard/weak-topics'),
+  getDifficultyProgress: (days) => api.get('/dashboard/difficulty-progress', { params: { days } }),
 }
 
 export const problemsAPI = {

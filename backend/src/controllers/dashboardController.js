@@ -139,6 +139,53 @@ const getAnalytics = async (req, res, next) => {
   }
 };
 
+const getDifficultyProgress = async (req, res, next) => {
+  try {
+    const userId = req.user.id;
+
+    const problemsSolved = await prisma.userProblem.findMany({
+      where: { userId },
+      include: { problem: true },
+      orderBy: { solvedAt: "asc" },
+    });
+
+    const dayMs = 24 * 60 * 60 * 1000;
+    const now = new Date();
+    const days = Number(req.query.days) || 30;
+    const progress = [];
+    let easyCount = 0, mediumCount = 0, hardCount = 0;
+
+    const dayMap = {};
+    problemsSolved.forEach(({ problem, solvedAt }) => {
+      const dayStr = new Date(solvedAt).toISOString().split("T")[0];
+      if (!dayMap[dayStr]) dayMap[dayStr] = { easy: 0, medium: 0, hard: 0 };
+      if (problem.difficulty === "Easy") dayMap[dayStr].easy++;
+      else if (problem.difficulty === "Medium") dayMap[dayStr].medium++;
+      else if (problem.difficulty === "Hard") dayMap[dayStr].hard++;
+    });
+
+    for (let i = days; i >= 0; i--) {
+      const date = new Date(now.getTime() - i * dayMs);
+      const dayStr = date.toISOString().split("T")[0];
+      const dayData = dayMap[dayStr] || { easy: 0, medium: 0, hard: 0 };
+      easyCount += dayData.easy;
+      mediumCount += dayData.medium;
+      hardCount += dayData.hard;
+      progress.push({
+        date: dayStr,
+        easy: easyCount,
+        medium: mediumCount,
+        hard: hardCount,
+        total: easyCount + mediumCount + hardCount,
+      });
+    }
+
+    res.json({ progress });
+  } catch (error) {
+    next(error);
+  }
+};
+
 const getWeakTopics = async (req, res, next) => {
   try {
     const userId = req.user.id;
@@ -176,4 +223,4 @@ const getWeakTopics = async (req, res, next) => {
   }
 };
 
-module.exports = { getDashboard, getAnalytics, getWeakTopics };
+module.exports = { getDashboard, getAnalytics, getWeakTopics, getDifficultyProgress };
