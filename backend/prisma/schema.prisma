@@ -31,6 +31,8 @@ model User {
   refreshTokens  RefreshToken[]
   passwordResetTokens PasswordResetToken[]
   notifications  Notification[]
+  bookmarks      Bookmark[]
+  auditLogs      AuditLog[]
 }
 
 model Problem {
@@ -179,6 +181,30 @@ model Notification {
   title     String
   message   String
   read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Bookmark {
+  id        String   @id @default(cuid())
+  userId    String
+  problemId String
+  note      String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  details   String?
+  ip        String?
   createdAt DateTime @default(now())
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)

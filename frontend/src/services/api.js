@@ -133,4 +133,11 @@ export const notificationsAPI = {
   markAllAsRead: () => api.put('/notifications/read-all'),
 }
 
+export const bookmarksAPI = {
+  getBookmarks: () => api.get('/bookmarks'),
+  addBookmark: (problemId, note) => api.post('/bookmarks', { problemId, note }),
+  removeBookmark: (id) => api.delete(`/bookmarks/${id}`),
+  toggleBookmark: (problemId) => api.post('/bookmarks/toggle', { problemId }),
+}
+
 export default api
