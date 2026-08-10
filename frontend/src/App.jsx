@@ -5,6 +5,7 @@ import { useAuthStore } from './stores/authStore'
 import { useAuthInit } from './hooks/useAuthInit'
 import { useKeyboardShortcuts } from './hooks/useKeyboardShortcuts'
 import ErrorBoundary from './components/ErrorBoundary'
+import SessionExpiryWarning from './components/SessionExpiryWarning'
 import Layout from './components/layout/Layout'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
@@ -87,6 +88,7 @@ export default function App() {
           <AppRoutes />
         </Router>
         <Toaster position="top-right" toastOptions={{ className: 'bg-dark-800 text-dark-100 border border-dark-700' }} />
+        <SessionExpiryWarning />
       </QueryClientProvider>
     </ErrorBoundary>
   )
