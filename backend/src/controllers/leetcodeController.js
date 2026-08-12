@@ -2,6 +2,7 @@ const realLeetcode = require("../services/leetcode/realLeetcode");
 const prisma = require("../config/db");
 const { createNotification } = require("./notificationController");
 const { logAudit } = require("../utils/audit");
+const { invalidateUserCache } = require("../utils/cache");
 
 const getProfile = async (req, res, next) => {
   try {
@@ -67,6 +68,7 @@ const connect = async (req, res, next) => {
       data: { lastSyncedAt: new Date() },
     });
 
+    await invalidateUserCache(req.user.id);
     await logAudit(req.user.id, "LEETCODE_CONNECTED", `Connected as ${trimmed}`, req.ip);
 
     res.json({
@@ -96,6 +98,8 @@ const sync = async (req, res, next) => {
       where: { id: req.user.id },
       data: { lastSyncedAt: new Date() },
     });
+
+    await invalidateUserCache(req.user.id);
 
     await createNotification(
       req.user.id,

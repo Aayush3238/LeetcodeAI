@@ -1,4 +1,5 @@
 const prisma = require("../config/db");
+const { invalidateUserCache } = require("../utils/cache");
 
 const getBookmarks = async (req, res, next) => {
   try {
@@ -37,6 +38,8 @@ const addBookmark = async (req, res, next) => {
       include: { problem: true },
     });
 
+    await invalidateUserCache(req.user.id);
+
     res.status(201).json({ bookmark });
   } catch (error) {
     next(error);
@@ -49,6 +52,7 @@ const removeBookmark = async (req, res, next) => {
     await prisma.bookmark.deleteMany({
       where: { id, userId: req.user.id },
     });
+    await invalidateUserCache(req.user.id);
     res.json({ message: "Bookmark removed" });
   } catch (error) {
     next(error);
@@ -68,12 +72,14 @@ const toggleBookmark = async (req, res, next) => {
 
     if (existing) {
       await prisma.bookmark.delete({ where: { id: existing.id } });
+      await invalidateUserCache(req.user.id);
       return res.json({ bookmarked: false });
     }
 
     await prisma.bookmark.create({
       data: { userId: req.user.id, problemId },
     });
+    await invalidateUserCache(req.user.id);
     res.json({ bookmarked: true });
   } catch (error) {
     next(error);
