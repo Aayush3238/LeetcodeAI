@@ -3,6 +3,10 @@ const validate = (schema) => (req, res, next) => {
     req.body = schema.parse(req.body);
     next();
   } catch (error) {
+    if (error.name === "ZodError") {
+      const message = error.errors.map((e) => e.message).join(", ");
+      return res.status(400).json({ message });
+    }
     next(error);
   }
 };
