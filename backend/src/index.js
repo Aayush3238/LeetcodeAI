@@ -4,7 +4,9 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const swaggerUi = require("swagger-ui-express");
 const passport = require("./config/passport");
+const swaggerSpec = require("./config/swagger");
 const { apiLimiter } = require("./middleware/rateLimiter");
 const errorHandler = require("./middleware/errorHandler");
 const { csrfProtection, setCsrfCookie } = require("./middleware/csrf");
@@ -60,6 +62,12 @@ app.get("/api/csrf-token", setCsrfCookie, (req, res) => {
 app.use("/api", csrfProtection);
 
 app.use("/uploads", express.static("uploads"));
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: ".swagger-ui .topbar { display: none }",
+  customSiteTitle: "LeetCoach AI API Documentation",
+}));
+app.get("/api-docs.json", (req, res) => res.json(swaggerSpec));
 
 app.use("/api/auth", authRoutes);
 app.use("/api/problems", problemRoutes);
