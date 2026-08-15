@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { AlertCircle, Search, Inbox, RefreshCw } from 'lucide-react'
 
@@ -168,15 +169,15 @@ export function ContentLoader({ text = 'Loading content...' }) {
 /**
  * Success banner component
  */
-export function SuccessBanner({ 
+export function SuccessBanner({
   message,
   onDismiss,
   autoHide = true,
   duration = 5000
 }) {
-  const [visible, setVisible] = React.useState(true)
+  const [visible, setVisible] = useState(true)
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (autoHide) {
       const timer = setTimeout(() => {
         setVisible(false)
@@ -213,12 +214,12 @@ export function SuccessBanner({
 /**
  * Warning banner component
  */
-export function WarningBanner({ 
+export function WarningBanner({
   message,
   onDismiss,
   action = null
 }) {
-  const [visible, setVisible] = React.useState(true)
+  const [visible, setVisible] = useState(true)
 
   if (!visible) return null
 
