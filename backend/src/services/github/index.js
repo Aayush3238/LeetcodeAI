@@ -18,6 +18,20 @@ async function githubFetch(endpoint, token) {
   return res.json();
 }
 
+async function githubFetchWithHeaders(endpoint, token) {
+  const res = await fetch(`${GITHUB_API_URL}${endpoint}`, {
+    headers: HEADERS(token),
+  });
+
+  if (!res.ok) {
+    throw new Error(`GitHub API error: ${res.status}`);
+  }
+
+  const data = await res.json();
+  const totalCount = parseInt(res.headers.get("x-total-count") || "0", 10);
+  return { data, totalCount };
+}
+
 class GitHubService {
   async getProfile(token) {
     return githubFetch("/user", token);
@@ -32,11 +46,11 @@ class GitHubService {
   }
 
   async getRepoStats(token, owner, repo) {
-    const [repoData, languages, commits, prs] = await Promise.all([
+    const [repoData, languages, commitsResult, prsResult] = await Promise.all([
       githubFetch(`/repos/${owner}/${repo}`, token),
       this.getRepoLanguages(token, owner, repo).catch(() => ({})),
-      githubFetch(`/repos/${owner}/${repo}/commits?per_page=1`, token).then((d) => d.length).catch(() => 0),
-      githubFetch(`/repos/${owner}/${repo}/pulls?state=all&per_page=1`, token).then((d) => d.length).catch(() => 0),
+      githubFetchWithHeaders(`/repos/${owner}/${repo}/commits?per_page=1`, token).catch(() => ({ totalCount: 0 })),
+      githubFetchWithHeaders(`/repos/${owner}/${repo}/pulls?state=all&per_page=1`, token).catch(() => ({ totalCount: 0 })),
     ]);
 
     return {
@@ -48,6 +62,8 @@ class GitHubService {
       stars: repoData.stargazers_count,
       forks: repoData.forks_count,
       issues: repoData.open_issues_count,
+      commits: commitsResult.totalCount,
+      pullRequests: prsResult.totalCount,
       topics: repoData.topics || [],
       createdAt: repoData.created_at,
       updatedAt: repoData.updated_at,
