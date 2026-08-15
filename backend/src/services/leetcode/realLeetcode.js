@@ -1,8 +1,8 @@
-const prisma = require("../config/db");
+const prisma = require("../../config/db");
 const { mapTagToTopic } = require("../../utils/topicMapper");
 let redis;
 try {
-  redis = require("../config/redis");
+  redis = require("../../config/redis");
 } catch {
   redis = null;
 }

@@ -1,7 +1,7 @@
 const cron = require("node-cron");
-const prisma = require("../config/db");
-const realLeetcode = require("./leetcode/realLeetcode");
-const logger = require("../utils/logger");
+const prisma = require("../../config/db");
+const realLeetcode = require("../leetcode/realLeetcode");
+const logger = require("../../utils/logger");
 
 const SYNC_COOLDOWN_MS = 60 * 60 * 1000;
 
