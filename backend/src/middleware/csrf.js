@@ -29,23 +29,17 @@ function csrfProtection(req, res, next) {
     return next();
   }
 
-  const token = req.headers["x-csrf-token"] || req.body?._csrf;
+  const token = req.headers["x-csrf-token"];
   if (!verifyCsrfToken(token)) {
     return res.status(403).json({ error: "Invalid or missing CSRF token" });
   }
   next();
 }
 
-function setCsrfCookie(req, res, next) {
+function setCsrfToken(req, res, next) {
   const token = generateCsrfToken();
-  res.cookie("csrf-token", token, {
-    httpOnly: false,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-    path: "/",
-  });
   res.setHeader("X-CSRF-Token", token);
   next();
 }
 
-module.exports = { csrfProtection, setCsrfCookie, generateCsrfToken };
+module.exports = { csrfProtection, setCsrfToken, generateCsrfToken };
