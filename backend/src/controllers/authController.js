@@ -6,6 +6,9 @@ const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
 const { logAudit } = require("../utils/audit");
 
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
+
 const userSelect = {
   id: true,
   name: true,
@@ -58,6 +61,20 @@ const login = async (req, res, next) => {
       return res.status(401).json({ message: "Invalid email or password" });
     }
 
+    if (user.lockedUntil && user.lockedUntil > new Date()) {
+      const remainingMinutes = Math.ceil((user.lockedUntil - new Date()) / 60000);
+      return res.status(423).json({
+        message: `Account is locked due to too many failed attempts. Try again in ${remainingMinutes} minutes.`,
+      });
+    }
+
+    if (user.lockedUntil && user.lockedUntil <= new Date()) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockedUntil: null },
+      });
+    }
+
     if (!user.password) {
       const methods = [];
       if (user.googleId) methods.push("Google");
@@ -68,7 +85,27 @@ const login = async (req, res, next) => {
 
     const isValidPassword = await bcrypt.compare(data.password, user.password);
     if (!isValidPassword) {
+      const newAttempts = user.failedLoginAttempts + 1;
+      const updateData = { failedLoginAttempts: newAttempts };
+
+      if (newAttempts >= MAX_FAILED_ATTEMPTS) {
+        updateData.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MS);
+        await logAudit(user.id, "ACCOUNT_LOCKED", `Locked after ${newAttempts} failed attempts`, req.ip);
+      }
+
+      await prisma.user.update({
+        where: { id: user.id },
+        data: updateData,
+      });
+
       return res.status(401).json({ message: "Invalid email or password" });
+    }
+
+    if (user.failedLoginAttempts > 0) {
+      await prisma.user.update({
+        where: { id: user.id },
+        data: { failedLoginAttempts: 0, lockedUntil: null },
+      });
     }
 
     const token = generateToken(user.id);
