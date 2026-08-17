@@ -4,6 +4,8 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const cookieParser = require("cookie-parser");
+const session = require("express-session");
+const RedisStore = require("connect-redis").default;
 const swaggerUi = require("swagger-ui-express");
 const passport = require("./config/passport");
 const swaggerSpec = require("./config/swagger");
@@ -26,6 +28,13 @@ const { startCronSync } = require("./services/sync/cronSync");
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+let redis;
+try {
+  redis = require("./config/redis");
+} catch {
+  redis = null;
+}
+
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -47,11 +56,27 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || "http://localhost:5173", crede
 app.use(morgan("combined", { stream: { write: (msg) => logger.info(msg.trim()) } }));
 app.use(express.json({ limit: "10mb" }));
 app.use(cookieParser());
-app.use(require("express-session")({
+
+const sessionConfig = {
   secret: process.env.SESSION_SECRET || process.env.JWT_SECRET || "dev-session-secret",
   resave: false,
   saveUninitialized: false,
-}));
+  cookie: {
+    secure: process.env.NODE_ENV === "production",
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000,
+  },
+};
+
+if (redis && process.env.REDIS_URL) {
+  sessionConfig.store = new RedisStore({
+    client: redis,
+    prefix: "sess:",
+    ttl: 86400,
+  });
+}
+
+app.use(session(sessionConfig));
 app.use(passport.initialize());
 app.use("/api", apiLimiter);
 
