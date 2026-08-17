@@ -5,6 +5,7 @@ const prisma = require("../config/db");
 const { generateToken, generateRefreshToken } = require("../middleware/auth");
 const { signupSchema, loginSchema, updateProfileSchema } = require("../validators/auth");
 const { logAudit } = require("../utils/audit");
+const logger = require("../utils/logger");
 
 const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION_MS = 15 * 60 * 1000;
@@ -249,7 +250,13 @@ const forgotPassword = async (req, res, next) => {
     const frontendUrl = process.env.FRONTEND_URL || "http://localhost:5173";
     const resetUrl = `${frontendUrl}/reset-password?token=${resetToken}`;
 
-    console.log(`[Password Reset] ${user.email}: ${resetUrl}`);
+    if (process.env.NODE_ENV !== "production") {
+      logger.info(`[Password Reset] ${user.email}: ${resetUrl}`);
+    } else {
+      logger.info(`[Password Reset] Reset token generated for user ${user.id}`);
+    }
+
+    await logAudit(user.id, "PASSWORD_RESET_REQUESTED", "Password reset requested", req.ip);
 
     res.json({ message: "If an account exists, a reset link has been sent." });
   } catch (error) {
