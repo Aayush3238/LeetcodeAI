@@ -8,9 +8,21 @@ try {
 async function invalidateCache(pattern) {
   if (!redis) return;
   try {
-    const keys = await redis.keys(pattern);
-    if (keys.length > 0) {
-      await redis.del(...keys);
+    let cursor = "0";
+    const keysToDelete = [];
+
+    do {
+      const [newCursor, keys] = await redis.scan(cursor, "MATCH", pattern, "COUNT", 100);
+      cursor = newCursor;
+      keysToDelete.push(...keys);
+    } while (cursor !== "0");
+
+    if (keysToDelete.length > 0) {
+      const batchSize = 100;
+      for (let i = 0; i < keysToDelete.length; i += batchSize) {
+        const batch = keysToDelete.slice(i, i + batchSize);
+        await redis.del(...batch);
+      }
     }
   } catch (error) {
     console.error("[Cache Invalidation Error]", error.message);
