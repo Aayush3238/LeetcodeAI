@@ -23,6 +23,7 @@ const leetcodeRoutes = require("./routes/leetcode");
 const githubRoutes = require("./routes/github");
 const notificationRoutes = require("./routes/notifications");
 const bookmarkRoutes = require("./routes/bookmarks");
+const graphRoutes = require("./routes/graph");
 const { startCronSync } = require("./services/sync/cronSync");
 
 const app = express();
@@ -103,6 +104,7 @@ app.use("/api/leetcode", leetcodeRoutes);
 app.use("/api/github", githubRoutes);
 app.use("/api/notifications", notificationRoutes);
 app.use("/api/bookmarks", bookmarkRoutes);
+app.use("/api/graph", graphRoutes);
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", timestamp: new Date().toISOString() });
