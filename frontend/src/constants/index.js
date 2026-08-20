@@ -27,5 +27,6 @@ export const SIDEBAR_LINKS = [
   { path: '/weak-topics', label: 'Weak Topics', icon: 'Target' },
   { path: '/revision-plan', label: 'Revision Plan', icon: 'Calendar' },
   { path: '/github', label: 'GitHub', icon: 'GitBranch' },
+  { path: '/code-graph', label: 'Code Graph', icon: 'Network' },
   { path: '/settings', label: 'Settings', icon: 'Settings' },
 ]

@@ -24,6 +24,7 @@ const WeakTopics = lazy(() => import('./pages/WeakTopics'))
 const RevisionPlan = lazy(() => import('./pages/RevisionPlan'))
 const GitHubRepos = lazy(() => import('./pages/GitHubRepos'))
 const Settings = lazy(() => import('./pages/Settings'))
+const CodeGraph = lazy(() => import('./pages/CodeGraph'))
 const NotFound = lazy(() => import('./pages/NotFound'))
 
 const queryClient = new QueryClient({
@@ -82,6 +83,7 @@ function AppRoutes() {
           <Route path="revision-plan" element={<RevisionPlan />} />
           <Route path="github" element={<GitHubRepos />} />
           <Route path="settings" element={<Settings />} />
+          <Route path="code-graph" element={<CodeGraph />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

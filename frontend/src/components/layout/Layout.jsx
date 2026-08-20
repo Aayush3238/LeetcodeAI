@@ -6,11 +6,11 @@ import { notificationsAPI } from '../../services/api'
 import { SIDEBAR_LINKS } from '../../constants'
 import {
   LayoutDashboard, User, Code2, FileCode, Bot, Target,
-  Calendar, Settings, LogOut, Menu, X, ChevronLeft, Search, Bell, GitBranch,
+  Calendar, Settings, LogOut, Menu, X, ChevronLeft, Search, Bell, GitBranch, Network,
 } from 'lucide-react'
 
 const iconMap = {
-  LayoutDashboard, User, Code2, FileCode, Bot, Target, Calendar, Settings, GitBranch,
+  LayoutDashboard, User, Code2, FileCode, Bot, Target, Calendar, Settings, GitBranch, Network,
 }
 
 const BOTTOM_NAV = [

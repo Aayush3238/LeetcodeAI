@@ -156,4 +156,10 @@ export const bookmarksAPI = {
   toggleBookmark: (problemId) => api.post('/bookmarks/toggle', { problemId }),
 }
 
+export const graphAPI = {
+  getGraph: () => api.get('/graph'),
+  getStats: () => api.get('/graph/stats'),
+  getNodeDetails: (nodeId) => api.get(`/graph/node/${encodeURIComponent(nodeId)}`),
+}
+
 export default api
